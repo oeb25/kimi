@@ -2,10 +2,9 @@
   "name": "kimi",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "start": "parcel src/index.html",
-    "build": "parcel build src/index.html"
+    "build": "NODE_ENV=production parcel build src/index.html"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +13,7 @@
     "@types/katex": "^0.11.0",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
+    "autoprefixer": "^10.2.3",
     "parcel": "^2.0.0-nightly.554",
     "postcss": "^8.2.4",
     "tailwindcss": "^2.0.2",
