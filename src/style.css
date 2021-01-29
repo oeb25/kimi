@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+
+.pt-focus > div {
+  @apply opacity-20;
+}
+.pt-focus > .pt-focus-ele {
+  @apply opacity-100;
+}
+
+@tailwind utilities;

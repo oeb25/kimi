@@ -1,0 +1,33 @@
+{
+  "name": "kimi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "parcel src/index.html",
+    "build": "parcel build src/index.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/katex": "^0.11.0",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "parcel": "^2.0.0-nightly.554",
+    "postcss": "^8.2.4",
+    "tailwindcss": "^2.0.2",
+    "typescript": "^4.1.3"
+  },
+  "dependencies": {
+    "katex": "^0.12.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
+  },
+  "postcss": {
+    "plugins": {
+      "tailwindcss": {},
+      "autoprefixer": {}
+    }
+  }
+}
