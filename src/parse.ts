@@ -95,12 +95,14 @@ export const parse = (s: string) => {
     return { eq };
   } catch (e) {}
   try {
-    const formula = parseFormula(s);
-    return { formula };
-  } catch (e) {}
-  try {
-    const compound = parseCompound(s);
-    return { compound };
+    const compounds = s.split(" + ");
+    if (compounds.length < 2) {
+      const compound = parseCompound(s);
+      return { compound };
+    } else {
+      const formula = parseFormula(s);
+      return { formula };
+    }
   } catch (e) {}
 };
 
@@ -145,14 +147,18 @@ export const latexCompound = (c: Compound): string => {
   }
 };
 
+// export const latexCompoundTop = (c: Compound): string => {
+//   const m = c.multi == 1 ? "" : c.multi;
+//   if (c.element) {
+//     return m + `\\text{${c.element.symbol}}`;
+//   } else {
+//     const self = c.compound.map(latexCompound).join(" ");
+//     return m + self + (c.oxidation ? `^{${c.oxidation}}` : "");
+//   }
+// };
 export const latexCompoundTop = (c: Compound): string => {
   const m = c.multi == 1 ? "" : c.multi;
-  if (c.element) {
-    return m + `\\text{${c.element.symbol}}`;
-  } else {
-    const self = c.compound.map(latexCompound).join(" ");
-    return m + self;
-  }
+  return m + latexCompound(setMulti(c, 1));
 };
 
 export const setMulti = (c: Compound, multi: number): Compound => ({
