@@ -1,10 +1,14 @@
 /* @ts-ignore */
-import rawData1 from "./source1.json";
+import source1Raw from "./sources/source1.json";
 /* @ts-ignore */
-import rawData2 from "./source2.json";
+import source2Raw from "./sources/source2.json";
+/* @ts-ignore */
+import oxidationStatesRaw from "./sources/oxidationStates.json";
+import { keys, mapValues } from "./util";
 
-const source1 = rawData1 as ElementSource1[];
-const source2 = rawData2 as ElementSource2[];
+const source1 = source1Raw as readonly ElementSource1[];
+const source2 = source2Raw as readonly ElementSource2[];
+const oxidationStates = oxidationStatesRaw as readonly OxidationState[][];
 
 type Query = { symbol: string };
 
@@ -13,7 +17,7 @@ export const getElement = (q: Query) =>
 
 /** Internal */
 
-export const elementList: KimiElement[] = source2.map(
+export const elementList: readonly KimiElement[] = source2.map(
   (e, i): KimiElement => ({
     atomicNumber: e.AtomicNumber,
     name: e.Element,
@@ -45,53 +49,56 @@ export const elementList: KimiElement[] = source2.map(
     numberOfValence: e.NumberofValence,
     electronicConfiguration: source1[i].electronicConfiguration,
     groupBlock: source1[i].groupBlock,
-    oxidationStates: source1[i].oxidationStates
-      ? source1[i].oxidationStates
-          .toString()
-          .split(",")
-          .map((x) => parseInt(x, 10))
-      : null,
+    oxidationStates: oxidationStates[i],
+    // oxidationStates: source1[i].oxidationStates
+    //   ? source1[i].oxidationStates
+    //       .toString()
+    //       .split(",")
+    //       .map((x) => parseInt(x, 10))
+    //   : null,
   })
 );
 
-export const elements: Record<string, KimiElement> = {};
+const elementsMap: Record<string, Readonly<KimiElement>> = {};
 
 for (const e of elementList) {
-  elements[e.symbol] = e;
+  elementsMap[e.symbol] = e;
 }
 
+export const elements = elementsMap as Readonly<Record<string, KimiElement>>;
+
 export interface KimiElement {
-  atomicNumber: number;
-  name: string;
-  symbol: string;
-  atomicMass: number;
-  numberOfNeutrons: number;
-  numberOfProtons: number;
-  numberOfElectrons: number;
-  period: number;
-  group: number | null;
-  phase: Phase;
-  radioactive: boolean;
-  natural: boolean;
-  metal: boolean;
-  nonmetal: boolean;
-  metalloid: boolean;
-  type: null | string;
-  atomicRadius: number | null;
-  electronegativity: number | null;
-  firstIonization: number | null;
-  density: number | null;
-  meltingPoint: number | null;
-  boilingPoint: number | null;
-  numberOfIsotopes: number | null;
-  discoverer: null | string;
-  year: number | null;
-  specificHeat: number | null;
-  numberOfShells: number;
-  numberOfValence: number | null;
-  electronicConfiguration: string;
-  groupBlock: GroupBlock;
-  oxidationStates: null | number[];
+  readonly atomicNumber: number;
+  readonly name: string;
+  readonly symbol: string;
+  readonly atomicMass: number;
+  readonly numberOfNeutrons: number;
+  readonly numberOfProtons: number;
+  readonly numberOfElectrons: number;
+  readonly period: number;
+  readonly group: number | null;
+  readonly phase: Phase;
+  readonly radioactive: boolean;
+  readonly natural: boolean;
+  readonly metal: boolean;
+  readonly nonmetal: boolean;
+  readonly metalloid: boolean;
+  readonly type: null | string;
+  readonly atomicRadius: number | null;
+  readonly electronegativity: number | null;
+  readonly firstIonization: number | null;
+  readonly density: number | null;
+  readonly meltingPoint: number | null;
+  readonly boilingPoint: number | null;
+  readonly numberOfIsotopes: number | null;
+  readonly discoverer: null | string;
+  readonly year: number | null;
+  readonly specificHeat: number | null;
+  readonly numberOfShells: number;
+  readonly numberOfValence: number | null;
+  readonly electronicConfiguration: string;
+  readonly groupBlock: GroupBlock;
+  readonly oxidationStates: OxidationState[];
 }
 
 /** Source 1: ??? */
@@ -198,3 +205,108 @@ export enum Phase {
   Liq = "liq",
   Solid = "solid",
 }
+
+/** Source 3: https://en.wikipedia.org/wiki/Oxidation_state#List_of_oxidation_states_of_the_elements */
+
+/* Extraction code:
+
+  Array.from($0.children).map(({ children }) =>
+    Array.from(children)
+      .slice(3, 18)
+      .map((g, i) =>
+        g.textContent.trim()
+          ? { common: !!g.querySelector("b"), ions: i - 5 }
+          : null
+      )
+      .filter((x) => x)
+  );
+*/
+
+export interface OxidationState {
+  common: boolean;
+  ions: number;
+}
+
+/** Tables */
+
+const table = {
+  "16.4": {
+    name:
+      "Ionization Constants of Some Diprotic Acids and a Polyprotic Acid and their Conjugate Bases at 258C",
+    entries: [
+      {
+        "Name of acid": "Sulfuric acid",
+        Formula: "H2SO4",
+        Ka: Infinity,
+        "Conjugate Base": "HSO-4",
+        Kb: 1e-20,
+      },
+    ],
+  },
+};
+
+const createModel = <T>(
+  operations: {
+    [K in keyof T]: {
+      [Q in keyof T]: (b: T[Q], rest: T) => T[K];
+    };
+  }
+) => {
+  const change = <K extends keyof T>(prev: T, k: K, v: T[K]) => {
+    const next = { ...prev };
+
+    let didChange = true;
+    let i = 0;
+
+    while (didChange) {
+      didChange = false;
+
+      keys(prev).map((k2) => {
+        const newValue = operations[k2][k](v, next);
+        // TODO: Proper eq
+        if (next[k2] != newValue) didChange = true;
+
+        next[k2] = newValue;
+      });
+    }
+    return next;
+  };
+
+  return change;
+};
+
+const myModel = createModel<{ a: number; b: number; c: number; d: number }>({
+  a: {
+    a: (a) => a,
+    b: (b) => b / 2,
+    c: (c, rest) => c / rest.b,
+    d: (d, rest) => d - (rest.b + rest.c),
+  },
+  b: {
+    b: (b) => b,
+    a: (a) => a * 2,
+    c: (c, rest) => c / rest.a,
+    d: (d, rest) => d - (rest.a + rest.c),
+  },
+  c: {
+    c: (c) => c,
+    a: (a, rest) => a * rest.b,
+    b: (b, rest) => b * rest.a,
+    d: (d, rest) => d - (rest.a + rest.b),
+  },
+  d: {
+    d: (d) => d,
+    a: (a, { b, c }) => a + b + c,
+    b: (b, { a, c }) => a + b + c,
+    c: (c, { a, b }) => a + b + c,
+  },
+});
+
+const m1 = { a: 0, b: 0, c: 0, d: 0 };
+const m2 = myModel(m1, "a", 5);
+const m3 = myModel(m2, "c", 3);
+const m4 = myModel(m3, "b", 19);
+console.log(m1);
+console.log(m2);
+console.log(m3);
+console.log(m4);

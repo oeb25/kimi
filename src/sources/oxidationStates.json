@@ -1,0 +1,761 @@
+[
+  [
+    { "common": true, "ions": -1 },
+    { "common": true, "ions": 1 }
+  ],
+  [],
+  [{ "common": true, "ions": 1 }],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 }
+  ],
+  [
+    { "common": false, "ions": -5 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    // { "common": true, "ions": -4 },
+    { "common": false, "ions": -4 },
+    // { "common": true, "ions": -3 },
+    // { "common": true, "ions": -2 },
+    // { "common": true, "ions": -1 },
+    { "common": true, "ions": 0 },
+    // { "common": true, "ions": 1 },
+    // { "common": true, "ions": 2 },
+    { "common": false, "ions": 2 },
+    // { "common": true, "ions": 3 },
+    { "common": true, "ions": 4 }
+  ],
+  [
+    { "common": true, "ions": -3 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": true, "ions": 5 }
+  ],
+  [
+    { "common": true, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 }
+  ],
+  [{ "common": true, "ions": -1 }],
+  [],
+  [
+    { "common": false, "ions": -1 },
+    { "common": true, "ions": 1 }
+  ],
+  [
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 }
+  ],
+  [
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": true, "ions": -4 },
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 }
+  ],
+  [
+    { "common": true, "ions": -3 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": true, "ions": 5 }
+  ],
+  [
+    { "common": true, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": true, "ions": 6 }
+  ],
+  [
+    { "common": true, "ions": -1 },
+    { "common": true, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": true, "ions": 5 },
+    { "common": false, "ions": 6 },
+    { "common": true, "ions": 7 }
+  ],
+  [{ "common": true, "ions": 0 }],
+  [
+    { "common": false, "ions": -1 },
+    { "common": true, "ions": 1 }
+  ],
+  [
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 }
+  ],
+  [
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": true, "ions": 5 }
+  ],
+  [
+    { "common": false, "ions": -4 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": true, "ions": 6 }
+  ],
+  [
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": false, "ions": 6 },
+    { "common": true, "ions": 7 }
+  ],
+  [
+    { "common": false, "ions": -4 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": true, "ions": 6 },
+    { "common": false, "ions": 7 }
+  ],
+  [
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": false, "ions": 5 }
+  ],
+  [
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": false, "ions": 4 }
+  ],
+  [
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": 0 },
+    { "common": true, "ions": 1 },
+    { "common": true, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": false, "ions": 4 }
+  ],
+  [
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 }
+  ],
+  [
+    { "common": false, "ions": -5 },
+    { "common": false, "ions": -4 },
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": true, "ions": -4 },
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 }
+  ],
+  [
+    { "common": true, "ions": -3 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": true, "ions": 5 }
+  ],
+  [
+    { "common": true, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": true, "ions": 6 }
+  ],
+  [
+    { "common": true, "ions": -1 },
+    { "common": true, "ions": 1 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": true, "ions": 5 },
+    { "common": false, "ions": 7 }
+  ],
+  [
+    { "common": true, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 }
+  ],
+  [
+    { "common": false, "ions": -1 },
+    { "common": true, "ions": 1 }
+  ],
+  [
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 }
+  ],
+  [
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": true, "ions": 5 }
+  ],
+  [
+    { "common": false, "ions": -4 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": true, "ions": 6 }
+  ],
+  [
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": false, "ions": 6 },
+    { "common": true, "ions": 7 }
+  ],
+  [
+    { "common": false, "ions": -4 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": false, "ions": 6 },
+    { "common": false, "ions": 7 },
+    { "common": false, "ions": 8 }
+  ],
+  [
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": false, "ions": 6 }
+  ],
+  [
+    { "common": true, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 }
+  ],
+  [
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": true, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 }
+  ],
+  [
+    { "common": false, "ions": -5 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": true, "ions": -4 },
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 }
+  ],
+  [
+    { "common": true, "ions": -3 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": true, "ions": 5 }
+  ],
+  [
+    { "common": true, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": true, "ions": 6 }
+  ],
+  [
+    { "common": true, "ions": -1 },
+    { "common": true, "ions": 1 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": true, "ions": 5 },
+    { "common": false, "ions": 6 },
+    { "common": true, "ions": 7 }
+  ],
+  [
+    { "common": true, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 4 },
+    { "common": false, "ions": 6 },
+    { "common": false, "ions": 8 }
+  ],
+  [
+    { "common": false, "ions": -1 },
+    { "common": true, "ions": 1 }
+  ],
+  [
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": true, "ions": 4 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": false, "ions": 5 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 }
+  ],
+  [
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": true, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 }
+  ],
+  [
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": true, "ions": 5 }
+  ],
+  [
+    { "common": false, "ions": -4 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": true, "ions": 6 }
+  ],
+  [
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": false, "ions": 6 },
+    { "common": false, "ions": 7 }
+  ],
+  [
+    { "common": false, "ions": -4 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": false, "ions": 6 },
+    { "common": false, "ions": 7 },
+    { "common": false, "ions": 8 }
+  ],
+  [
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": false, "ions": 6 },
+    { "common": false, "ions": 7 },
+    { "common": false, "ions": 8 },
+    { "common": false, "ions": 9 }
+  ],
+  [
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": false, "ions": 6 }
+  ],
+  [
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 0 },
+    { "common": true, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 5 }
+  ],
+  [
+    { "common": false, "ions": -2 },
+    { "common": true, "ions": 1 },
+    { "common": true, "ions": 2 }
+  ],
+  [
+    { "common": false, "ions": -5 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": true, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": -4 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 1 },
+    { "common": true, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 }
+  ],
+  [
+    { "common": false, "ions": -3 },
+    { "common": false, "ions": -2 },
+    { "common": false, "ions": -1 },
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": false, "ions": 5 }
+  ],
+  [
+    { "common": true, "ions": -2 },
+    { "common": true, "ions": 2 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": false, "ions": 6 }
+  ],
+  [
+    { "common": true, "ions": -1 },
+    { "common": true, "ions": 1 },
+    { "common": false, "ions": 3 },
+    { "common": false, "ions": 5 },
+    { "common": false, "ions": 7 }
+  ],
+  [
+    { "common": true, "ions": 2 },
+    { "common": false, "ions": 6 }
+  ],
+  [{ "common": true, "ions": 1 }],
+  [{ "common": true, "ions": 2 }],
+  [{ "common": true, "ions": 3 }],
+  [
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 }
+  ],
+  [
+    { "common": false, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": true, "ions": 5 }
+  ],
+  [
+    { "common": false, "ions": 1 },
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": true, "ions": 6 }
+  ],
+  [
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": true, "ions": 5 },
+    { "common": false, "ions": 6 },
+    { "common": false, "ions": 7 }
+  ],
+  [
+    { "common": false, "ions": 2 },
+    { "common": false, "ions": 3 },
+    { "common": true, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": false, "ions": 6 },
+    { "common": false, "ions": 7 },
+    { "common": false, "ions": 8 }
+  ],
+  [
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": false, "ions": 6 },
+    { "common": false, "ions": 7 }
+  ],
+  [
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": false, "ions": 5 },
+    { "common": false, "ions": 6 }
+  ],
+  [
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": false, "ions": 5 }
+  ],
+  [
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 },
+    { "common": false, "ions": 5 }
+  ],
+  [
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 },
+    { "common": false, "ions": 4 }
+  ],
+  [
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": false, "ions": 2 },
+    { "common": true, "ions": 3 }
+  ],
+  [
+    { "common": true, "ions": 2 },
+    { "common": false, "ions": 3 }
+  ],
+  [{ "common": true, "ions": 3 }],
+  [{ "common": true, "ions": 4 }],
+  [{ "common": true, "ions": 5 }],
+  [
+    { "common": false, "ions": 0 },
+    { "common": true, "ions": 6 }
+  ],
+  [{ "common": true, "ions": 7 }],
+  [{ "common": true, "ions": 8 }],
+  [],
+  [],
+  [],
+  [{ "common": true, "ions": 2 }],
+  [],
+  [],
+  [],
+  [],
+  [],
+  []
+]

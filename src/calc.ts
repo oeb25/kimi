@@ -1,6 +1,6 @@
 import * as data from "./data";
 import { findIntegerSolution } from "./matrix";
-import { Compound, setMulti } from "./parse";
+import { Compound, Equation, parseCompound, setMulti } from "./parse";
 import { keys, mapValues } from "./util";
 
 const ERROR_FACTOR = 1000000000;
@@ -50,7 +50,7 @@ export const tallyElements = (c: Compound): Record<string, number> => {
   }
 };
 
-const balance = ({ left, right }: { left: Compound[]; right: Compound[] }) => {
+const balance = ({ left, right }: Equation) => {
   const leftT = left.map((e) => tallyElements(setMulti(e, 1)));
   const rightT = right.map((e) => tallyElements(setMulti(e, 1)));
 
@@ -78,7 +78,7 @@ const balance = ({ left, right }: { left: Compound[]; right: Compound[] }) => {
   };
 };
 
-export const toBalanced = (eq: { left: Compound[]; right: Compound[] }) => {
+export const toBalanced = (eq: Equation) => {
   const { left, right } = balance(eq);
   return {
     left: eq.left.map((c, i) => setMulti(c, left[i])),
@@ -92,9 +92,11 @@ export const toBalanced = (eq: { left: Compound[]; right: Compound[] }) => {
 // x^2 + (u+v)*x + x*b + u*v - a*b = 0
 // x^2 + (u+v+b)*x + u*v - a*b = 0
 
-const equibThing = (a: number, b: number, u: number, v: number) => {
+export const equibThing = (a: number, b: number, u: number, v: number) => {
   const res = solveQuadratic(1, u + v + b, u * v - a * b);
-  return res ? { pH: 14 + Math.log10(Math.max(...res)) } : null;
+  if (!res) return null;
+  const x = Math.max(...res);
+  return { x, pH: 14 + Math.log10(x) };
 };
 
 const solveQuadratic = (a: number, b: number, c: number) => {
@@ -110,3 +112,58 @@ const solveQuadratic = (a: number, b: number, c: number) => {
 };
 
 console.log(equibThing(0.25, 1.4e-11, 0, 0));
+
+/** OXIDATION */
+
+// interface Oxidation {
+//   compound: Compound,
+//   o
+// }
+
+// LaTeX for oxidation indication \stackrel{!}{=}
+
+export const determineOxidations = (
+  c: Compound,
+  includeUncommon: boolean = false
+): Compound[] => {
+  // If the parsed compound has a fixed oxidation respect it
+  // if (typeof c.charge == "number") return [{ ...c, oxidation: c.charge }];
+
+  if (c.element) {
+    return c.element.oxidationStates
+      .filter((o) => includeUncommon || o.common)
+      .map((o) => ({
+        ...c,
+        oxidation: o.ions,
+      }))
+      .filter((o) =>
+        typeof c.charge == "number" ? o.oxidation == c.charge : true
+      );
+  } else {
+    const possibilites: Compound[] = [{ ...c, compound: [] }];
+
+    for (const x of c.compound) {
+      const prev = possibilites.slice();
+      for (const oxi of determineOxidations(x, includeUncommon)) {
+        for (const p of prev) {
+          // This can never happen
+          if (!p.compound) throw "It happened anyway";
+          possibilites.push({ ...p, compound: [...p.compound!, oxi] });
+        }
+      }
+      possibilites.splice(0, prev.length);
+    }
+    return possibilites
+      .map((o) => {
+        const oxidation = o.compound
+          ? o.compound.reduce((acc, x) => acc + x.multi * (x.oxidation || 0), 0)
+          : o.oxidation;
+        return { ...o, oxidation };
+      })
+      .filter((o) =>
+        typeof c.charge == "number" ? o.oxidation == c.charge : true
+      );
+  }
+};
+
+console.log(determineOxidations(parseCompound("HCl(NaO2ClP)2+")));

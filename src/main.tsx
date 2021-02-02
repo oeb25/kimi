@@ -1,23 +1,46 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { toBalanced, calculateAtomicMass, extractElements } from "./calc";
-import { Compound, latexCompoundTop, parse, setMulti } from "./parse";
+import {
+  toBalanced,
+  calculateAtomicMass,
+  extractElements,
+  equibThing,
+  determineOxidations,
+} from "./calc";
+import { Compound, latexCompoundTop, parse, setMulti, Equation } from "./parse";
 import {} from "katex";
 import { Katex } from "./Katex";
 import { intersperse, keys, mapValues, values } from "./util";
 import * as data from "./data";
 import { KimiElement } from "./data";
 import { PeriodicTable } from "./PeriodicTable";
+import * as mathjs from "mathjs";
+
+const Precision = React.createContext(3);
 
 const App: React.FC<{}> = ({}) => {
   const [focus, setFocus] = React.useState<KimiElement[]>([]);
   const [showTable, setShowTable] = React.useState(false);
+  const [precision, setPrecision] = React.useState(3);
 
   return (
     <div className="grid min-h-screen grid-flow-col text-white bg-gray-800 min-w-screen place-items-center">
       <div className="grid items-center grid-flow-col-dense gap-4">
         {/* <KimiApp /> */}
-        <KimiApp setFocus={setFocus} setShowTable={setShowTable} />
+        <Precision.Provider value={precision}>
+          <KimiApp setFocus={setFocus} setShowTable={setShowTable} />
+        </Precision.Provider>
+        <div className="flex flex-col p-2 text-gray-600 shadow">
+          <label>Precision</label>
+          <input
+            type="number"
+            className="text-center bg-transparent no-spin"
+            value={precision}
+            min={0}
+            max={10}
+            onChange={(e) => setPrecision(parseInt(e.target.value))}
+          />
+        </div>
       </div>
     </div>
   );
@@ -30,8 +53,9 @@ const KimiApp: React.FC<{
   const [focus, setFocus] = React.useState<KimiElement[]>([]);
   const [showTable, setShowTable] = React.useState(false);
 
-  const [input, setInput] = React.useState("TiCl4 + 2Mg -> Ti + 2MgCl2");
-  // const [input, setInput] = React.useState("Ti");
+  // const [input, setInput] = React.useState("TiCl4 + Mg = Ti + MgCl2");
+  const [input, setInput] = React.useState("HCOOH = HCOO- + H+");
+  // const [input, setInput] = React.useState("C");
   const parsed = React.useMemo(() => {
     try {
       return parse(input);
@@ -129,10 +153,41 @@ const KimiApp: React.FC<{
             }
           />
         )} */}
-      {doBalance && balanced ? (
-        <BalanceEquation eq={balanced} />
-      ) : parsed && parsed.eq ? (
-        <BalanceEquation eq={parsed.eq} />
+      {parsed?.eq ? (
+        <BalanceEquation eq={(doBalance && balanced) || parsed.eq} />
+      ) : null}
+
+      {/* <details>
+        <summary className="w-full outline-none cursor-pointer">
+          Equilibrium
+        </summary>
+
+        <Equilibrium />
+      </details> */}
+      {parsed?.eq && (
+        <details>
+          <summary className="w-full outline-none cursor-pointer">
+            Equilibrium
+          </summary>
+
+          <Equilibrium2 eq={(doBalance && balanced) || parsed.eq} />
+        </details>
+      )}
+
+      {parsed?.formula ? (
+        <details>
+          <summary className="w-full outline-none cursor-pointer">
+            Oxidation
+          </summary>
+
+          <div className="grid items-start grid-flow-col gap-4 justify-items-start">
+            {determineOxidations(parsed.formula[0])
+              // .filter((c) => c.oxidation == 0)
+              .map((c) => (
+                <Katex src={latexCompoundTop(c)} />
+              ))}
+          </div>
+        </details>
       ) : null}
 
       {
@@ -146,12 +201,306 @@ const KimiApp: React.FC<{
           }}
           // className={showTable ? "" : "pointer-events-none h-0"}
         >
-          <summary className="outline-none cursor-pointer">
-            PeriodicTable
+          <summary className="w-full outline-none cursor-pointer">
+            Periodic Table
           </summary>
           <PeriodicTable focus={focus} onClick={onClickElement} />
         </details>
       }
+    </div>
+  );
+};
+
+const newtonApproximate = (s: string, tolerance = 0.00000001) => {
+  try {
+    const fParsed = mathjs.parse(s);
+    const dfParsed = mathjs.derivative(s, "x");
+
+    const f = (x: number) => fParsed.evaluate({ x });
+    const df = (x: number) => dfParsed.evaluate({ x });
+
+    const maxCount = 1000;
+
+    let deriv = fParsed;
+    let degree = 0;
+    while (!deriv.equals(mathjs.parse("0"))) {
+      deriv = mathjs.derivative(deriv, "x");
+      degree += 1;
+      if (degree > 10) throw "fuck degree explodes";
+    }
+
+    const results: number[] = [];
+    for (let i = 0; i < degree * 5 && results.length < degree; i++) {
+      const guess = Math.sin(Math.exp(i));
+      let x = guess;
+
+      if (!Number.isFinite(f(x)) || Number.isNaN(f(x)) || df(x) == 0) {
+        continue;
+      }
+
+      for (
+        let count = 1;
+        Math.abs(f(x)) > tolerance && count < maxCount;
+        count++
+      ) {
+        if (Number.isNaN(f(x)) || Number.isNaN(df(x))) {
+          continue;
+        }
+
+        x -= f(x) / df(x); //Newtons method.
+        // console.log("Step: " + count + " x:" + x + " Value:" + f(x));
+      }
+
+      if (results.findIndex((y) => Math.abs(x - y) < 0.00001) == -1) {
+        results.push(x);
+      }
+    }
+
+    results.sort((a, b) => a - b);
+
+    return results;
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+};
+
+const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
+  const numCols = eq.left.length + eq.right.length;
+
+  const [initial, setInitial] = React.useState(
+    eq.left.concat(eq.right).map((x, i) => (i < 2 ? (0.75 as number) : 0))
+  );
+  const [equibConst, setEquibConst] = React.useState(56.3);
+
+  const denom = eq.left
+    .map((c, i) => {
+      const init = initial[i];
+      return `(${init} - ${c.multi}x)^${c.multi}`;
+    })
+    .join(" * ");
+  const num = eq.right
+    .map((c, i) => {
+      const init = initial[i + eq.left.length];
+      return `(${init} + ${c.multi}x)^${c.multi}`;
+    })
+    .join(" * ");
+  const frac = `(${num})/(${denom})`;
+
+  const mama = `${equibConst} * (${denom}) - (${num})`;
+
+  // const x = newtonApproximate(`${frac} - ${equibConst}`);
+  const x = newtonApproximate(mama).filter((x) => x >= 0);
+
+  const foundItLeft = eq.left.findIndex(
+    (c) =>
+      c.charge == 1 &&
+      c.compound?.length === 0 &&
+      c.compound[0].element?.symbol == "H"
+  );
+  const foundItRight = eq.right.findIndex(
+    (c) =>
+      c.compound?.length === 1 &&
+      c.compound[0].charge == 1 &&
+      c.compound[0].element?.symbol == "H"
+  );
+  console.log(foundItLeft, eq.left, foundItRight, eq.right);
+
+  const renderInitial = (c: Compound, side: "left" | "right", i: number) => (
+    <UnitInput
+      key={i}
+      value={initial[i]}
+      placeholder="a"
+      onChange={(v) =>
+        setInitial((init) => [...init.slice(0, i), v, ...init.slice(i + 1)])
+      }
+      unit="M"
+    />
+  );
+  const renderChange = (c: Compound, side: "left" | "right", i: number) => (
+    <UnitInput
+      key={i}
+      value={`${side == "left" ? "-" : "+"}${c.multi}x`}
+      placeholder="a"
+      unit="M"
+    />
+  );
+  const renderEquilibrium = (
+    c: Compound,
+    side: "left" | "right",
+    i: number
+  ) => (
+    <UnitInput
+      value={initial[i] + (side == "left" ? -1 : 1) * c.multi * x[0]}
+      placeholder="a"
+      unit="M"
+      key={i}
+    />
+  );
+
+  return (
+    <div>
+      <div
+        className="grid justify-center"
+        style={{ gridTemplateColumns: `auto repeat(${numCols * 2 - 1}, auto)` }}
+      >
+        <span></span>
+        {intersperse(
+          eq.left.map((c, i) => (
+            <div key={i} className="text-center">
+              <Katex src={latexCompoundTop(c)} />
+            </div>
+          )),
+          (idx) => (
+            <div key={"sep-" + idx} className="text-center">
+              <Katex src="+" />
+            </div>
+          )
+        )}
+        <Katex src={"="} />
+        {intersperse(
+          eq.right.map((c, i) => (
+            <div key={i} className="text-center">
+              <Katex src={latexCompoundTop(c)} />
+            </div>
+          )),
+          (idx) => (
+            <div key={"sep-" + idx} className="text-center">
+              <Katex src="+" />
+            </div>
+          )
+        )}
+
+        <span>Initial</span>
+        {intersperse(
+          eq.left.map((c, i) => renderInitial(c, "left", i)),
+          (idx) => (
+            <span key={"sep-" + idx} />
+          )
+        )}
+        <span />
+        {intersperse(
+          eq.right.map((c, i) => renderInitial(c, "right", i + eq.left.length)),
+          (idx) => (
+            <span key={"sep-" + idx} />
+          )
+        )}
+
+        <span>Change</span>
+        {intersperse(
+          eq.left.map((c, i) => renderChange(c, "left", i)),
+          (idx) => (
+            <span key={"sep-" + idx} />
+          )
+        )}
+        <span />
+        {intersperse(
+          eq.right.map((c, i) => renderChange(c, "right", i + eq.left.length)),
+          (idx) => (
+            <span key={"sep-" + idx} />
+          )
+        )}
+
+        <span>Equilibrium</span>
+        {intersperse(
+          eq.left.map((c, i) => renderEquilibrium(c, "left", i)),
+          (idx) => (
+            <span key={"sep-" + idx} />
+          )
+        )}
+        <span />
+        {intersperse(
+          eq.right.map((c, i) =>
+            renderEquilibrium(c, "right", i + eq.left.length)
+          ),
+          (idx) => (
+            <span key={"sep-" + idx} />
+          )
+        )}
+      </div>
+      <div className="flex items-start">
+        <div className="grid grid-flow-col-dense">
+          <Katex src="K_* =" />
+          <UnitInput
+            placeholder="Value of K*"
+            value={equibConst}
+            onChange={(v) => setEquibConst(v || 0)}
+          />
+        </div>
+        <div className="grid grid-flow-col-dense">
+          <Katex src="x =" />
+          <UnitInput placeholder="Solution for x" value={x} unit="M" />
+        </div>
+        <Katex src={mathjs.parse(frac).toTex()} />
+      </div>
+    </div>
+  );
+};
+
+const Equilibrium: React.FC<{}> = ({}) => {
+  const [a, setA] = React.useState(0.25);
+  const [b, setB] = React.useState(1.4e-11);
+  const [u, setU] = React.useState(0);
+  const [v, setV] = React.useState(0);
+
+  const res = equibThing(a, b, u, v);
+
+  console.log({ a, b, u, v }, res);
+
+  return (
+    <div>
+      <div
+        className="grid border-b"
+        style={{ gridTemplateColumns: "auto repeat(3, auto)" }}
+      >
+        <span>Initial</span>
+        <UnitInput value={a} placeholder="a" onChange={setA} unit="M" />
+        <UnitInput value={u} placeholder="u" onChange={setU} unit="M" />
+        <UnitInput value={v} placeholder="v" onChange={setV} unit="M" />
+        <span>Change</span>
+        <UnitInput
+          value={res ? -res.x : NaN}
+          placeholder="res ? -res.x : NaN"
+          unit="M"
+        />
+        <UnitInput
+          value={res ? res.x : NaN}
+          placeholder="res ? res.x : NaN"
+          unit="M"
+        />
+        <UnitInput
+          value={res ? res.x : NaN}
+          placeholder="res ? res.x : NaN"
+          unit="M"
+        />
+        <span>Equilibrium</span>
+        <UnitInput
+          value={res ? a - res.x : NaN}
+          placeholder="res ? -res.x : NaN"
+          unit="M"
+        />
+        <UnitInput
+          value={res ? res.x : NaN}
+          placeholder="res ? res.x : NaN"
+          unit="M"
+        />
+        <UnitInput
+          value={res ? res.x : NaN}
+          placeholder="res ? res.x : NaN"
+          unit="M"
+        />
+      </div>
+      <UnitInput value={b} placeholder="b" onChange={setB} unit="Ka/Kb" />
+      <UnitInput
+        value={res ? res.pH : NaN}
+        placeholder="res ? res.pH : NaN"
+        unit="pH"
+      />
+      <UnitInput
+        value={res ? (res.x / a) * 100 : NaN}
+        placeholder="res ? res.x : NaN"
+        unit="%"
+      />
     </div>
   );
 };
@@ -208,7 +557,18 @@ const CompoundInfo: React.FC<{ cs: Compound[] }> = ({ cs }) => {
             <ElectronConfigList base={cData} />
             <DataRow title="Oxidation States:">
               {cData.oxidationStates ? (
-                <Katex src={cData.oxidationStates.join(", ")} />
+                <Katex
+                  src={cData.oxidationStates
+                    .filter((o) => o.ions)
+                    .map((o) => {
+                      const ions = o.ions < 0 ? o.ions : "+" + o.ions;
+                      return o.common
+                        ? // ? `\\htmlStyle{color: gray;}{\\bm{${ions}}}`
+                          `\\bm{${ions}}`
+                        : `\\htmlStyle{opacity: 0.3;}{${ions}}`;
+                    })
+                    .join(", ")}
+                />
               ) : (
                 <p>Missing</p>
               )}
@@ -227,7 +587,7 @@ const CompoundInfo: React.FC<{ cs: Compound[] }> = ({ cs }) => {
               const v = cData[k];
 
               const latex = Array.isArray(v)
-                ? v.join(", ")
+                ? v.map((x) => x.ions).join(", ")
                 : typeof v == "boolean"
                 ? v
                   ? "\\text{Yes}"
@@ -282,7 +642,7 @@ const ElectronConfigList: React.FC<{ base: KimiElement }> = ({ base }) => {
       const sym = m[1];
       const next = data.elements[sym];
       entries.push(
-        <DataRow title={<Katex src={sym} key={i++} />}>
+        <DataRow key={i++} title={<Katex src={sym} />}>
           <Katex
             src={(next.electronicConfiguration || "").replace(/ /g, "\\;")}
           />
@@ -293,7 +653,7 @@ const ElectronConfigList: React.FC<{ base: KimiElement }> = ({ base }) => {
     }
   }
 
-  return <>{entries}</>;
+  return <React.Fragment key={"idk-" + i}>{entries}</React.Fragment>;
 };
 
 const BalanceEquation: React.FC<{
@@ -351,7 +711,7 @@ const BalanceEquation: React.FC<{
           <Katex src="+" key={"plus-" + i} />
         )
       )}
-      <Katex src="\Longrightarrow" />
+      <Katex src="=" />
       {intersperse(
         eq.right.map((c, i) => (
           <CompoundMessure
@@ -429,30 +789,110 @@ const AnnotatedInput: React.FC<{
   placeholder: string;
   annotation: React.ReactNode;
 }> = ({ value, onChange, placeholder, annotation }) => {
+  return (
+    // <div className="grid" style={{ gridTemplateColumns: "7em 2em" }}>
+    <UnitInput
+      value={value}
+      placeholder={placeholder}
+      onChange={onChange}
+      unit={annotation}
+    />
+    // <span>{annotation}</span>
+    // </div>
+  );
+};
+
+const UnitInput: React.FC<
+  | {
+      value: number;
+      onChange?: (x: number) => void;
+      placeholder: string;
+      precision?: number;
+      unit?: React.ReactNode;
+    }
+  | {
+      value: string;
+      onChange?: undefined;
+      placeholder: string;
+      precision?: number;
+      unit?: React.ReactNode;
+    }
+> = (args) => {
+  const { placeholder, precision: prec, unit } = args;
+
   const [focus, setFocus] = React.useState(false);
   const [ownValue, setOwnValue] = React.useState("");
 
+  const ctxPrec = React.useContext(Precision);
+  const precision =
+    typeof prec == "number" ? prec : typeof ctxPrec == "number" ? ctxPrec : 3;
+
   React.useEffect(() => {
-    if (!focus) setOwnValue(value.toString());
-  }, [focus, value]);
+    if (!args.onChange) return;
+
+    if (!focus) {
+      if (evaluate(ownValue) != args.value)
+        setOwnValue(prettyNumber(args.value, precision));
+    }
+  }, [focus, args.value]);
 
   return (
-    <div className="grid" style={{ gridTemplateColumns: "7em 2em" }}>
-      <input
-        type="number"
-        className="font-mono text-right bg-transparent"
-        placeholder={placeholder}
-        value={focus ? ownValue : value}
-        onChange={(e) => {
-          setOwnValue(e.target.value);
-          onChange(parseFloat(e.target.value));
-        }}
-        onFocus={() => setFocus(true)}
-        onBlur={() => setFocus(false)}
-      />
-      <span>{annotation}</span>
+    <div className="flex font-mono">
+      {args.onChange ? (
+        <input
+          // type="number"
+          className={"w-32 text-right bg-transparent border-b border-gray-700"}
+          placeholder={placeholder}
+          value={
+            focus || evaluate(ownValue) == args.value
+              ? ownValue
+              : prettyNumber(args.value, precision)
+          }
+          onChange={(e) => {
+            if (!args.onChange) return;
+            setOwnValue(e.target.value);
+            args.onChange(evaluate(e.target.value));
+          }}
+          onFocus={() => setFocus(true)}
+          onBlur={() => setFocus(false)}
+        />
+      ) : (
+        <span
+          // type="number"
+          className="w-32 italic text-right text-gray-400 bg-transparent"
+        >
+          {focus || evaluate(ownValue) == args.value
+            ? ownValue
+            : typeof args.value == "string"
+            ? args.value
+            : prettyNumber(args.value, precision)}
+        </span>
+      )}
+      <div className="w-10 pl-1">{unit}</div>
     </div>
   );
 };
+
+// const prettyNumber = (x: number, precision: number) =>
+//   10 > x && x >= 1
+//     ? x.toFixed(precision)
+//     : ((10000 > Math.abs(x) && Math.abs(x) > 0.0001) || x == 0) &&
+//       (Math.abs(x) % 1).toString().length <= precision + 3
+//     ? x.toString()
+//     : x.toExponential(precision);
+// const prettyNumber = (x: number, precision: number) =>
+//   10 > x && x >= 1
+//     ? x.toFixed(precision)
+//     : (10000 > Math.abs(x) && Math.abs(x) > 0.0001) || x == 0
+//     ? (Math.abs(x) % 1).toString().length > precision + 3
+//       ? x.toFixed(precision)
+//       : x.toString()
+//     : x.toExponential(precision);
+// const DANGER = true;
+// const evaluate = (x: string) => (DANGER ? eval(x) : parseFloat(x));
+
+const prettyNumber = (x: number, precision: number) =>
+  mathjs.format(x, { precision });
+const evaluate = (x: string) => mathjs.evaluate(x) as number;
 
 ReactDOM.render(<App />, document.querySelector("#app")!);

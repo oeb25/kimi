@@ -1,18 +1,21 @@
 import { elements, KimiElement } from "./data";
 
-export type Compound =
+export type Compound = {
+  charge?: number;
+  oxidation?: number;
+  multi: number;
+} & (
   | {
       compound: Compound[];
       element?: undefined;
-      oxidation?: number;
-      multi: number;
     }
   | {
       compound?: undefined;
       element: KimiElement;
-      oxidation?: number;
-      multi: number;
-    };
+    }
+);
+
+export type Equation = { left: Compound[]; right: Compound[] };
 
 const parseOxidation = (s?: string) => {
   if (!s) return void 0;
@@ -38,7 +41,7 @@ const recurse = (s: string): Compound[] => {
           const compound = recurse(m[1]);
           return {
             compound,
-            oxidation: parseOxidation(m[2]),
+            charge: parseOxidation(m[2]),
             multi: parseInt(m[3] || "1"),
           };
         } else {
@@ -55,7 +58,7 @@ const recurse = (s: string): Compound[] => {
 
           return {
             element: elements[m[1]],
-            oxidation: parseOxidation(m[2]),
+            charge: parseOxidation(m[2]),
             multi: parseInt(m[3] || "1", 10),
           };
         }
@@ -79,8 +82,8 @@ export const parseCompound = (s: string): Compound => {
 
 export const parseFormula = (s: string) => s.split(" + ").map(parseCompound);
 
-export const parseEquation = (s: string) => {
-  const [lhs, rhs] = s.split("->");
+export const parseEquation = (s: string): Equation => {
+  const [lhs, rhs] = s.split("=");
   const left = parseFormula(lhs);
   const right = parseFormula(rhs);
   return { left, right };
@@ -119,18 +122,26 @@ export const formatCompound = (c: Compound | Compound[]): string => {
 
 export const latexCompound = (c: Compound): string => {
   const m = c.multi == 1 ? "" : `_{${c.multi}}`;
-  const oxi = c.oxidation
-    ? c.oxidation == 1
+  const charge = c.charge
+    ? c.charge == 1
       ? "^+"
-      : c.oxidation == -1
+      : c.charge == -1
       ? "^-"
-      : `^{${Math.abs(c.oxidation)}${c.oxidation > 0 ? "+" : "-"}}`
+      : `^{${Math.abs(c.charge)}${c.charge > 0 ? "+" : "-"}}`
     : "";
+  const oxi =
+    typeof c.oxidation == "number"
+      ? `\\htmlStyle{color: red;}{${
+          c.oxidation > 0 ? "+" + c.oxidation : c.oxidation
+        }}`
+      : "";
   if (c.element) {
-    return `\\text{${c.element.symbol}}` + m + oxi;
+    // const e = `\\text{${c.element.symbol}}${m}${charge}`;
+    // return oxi ? `{${oxi} \\above 0pt ${e}}` : e;
+    return `\\stackrel{${oxi}}{\\text{${c.element.symbol}}${m}${charge}}`;
   } else {
     const self = c.compound.map(latexCompound).join(" ");
-    return m ? `(${self})${m}${oxi}` : `${self}${m}${oxi}`;
+    return m || charge ? `(${self})${m}${charge}` : `${self}${m}${charge}`;
   }
 };
 

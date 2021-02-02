@@ -11,6 +11,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/katex": "^0.11.0",
+    "@types/mathjs": "^6.0.11",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
     "autoprefixer": "^10.2.3",
@@ -21,6 +22,7 @@
   },
   "dependencies": {
     "katex": "^0.12.0",
+    "mathjs": "^9.1.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1"
   },
