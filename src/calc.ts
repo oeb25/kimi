@@ -1,6 +1,13 @@
 import * as data from "./data";
 import { findIntegerSolution } from "./matrix";
-import { Compound, Equation, parseCompound, setMulti } from "./parse";
+import {
+  Compound,
+  Equation,
+  Formula,
+  FormulaTerm,
+  setCount,
+  setMulti,
+} from "./parse";
 import { keys, mapValues } from "./util";
 
 const ERROR_FACTOR = 1000000000;
@@ -12,21 +19,23 @@ export const calculateAtomicMass = (cs: Compound[]): number =>
         .map((c) =>
           c.element
             ? c.element.atomicMass * c.multi
-            : calculateAtomicMass(c.compound) * c.multi
+            : calculateAtomicMass(c.group) * c.multi
         )
         .reduce((a, b) => a + b, 0)
   ) / ERROR_FACTOR;
 
 export const extractElements = (
-  cs: Compound | Compound[]
+  cs: FormulaTerm[] | Compound
 ): Set<data.KimiElement> => {
   const res = new Set<data.KimiElement>();
 
   for (const c of Array.isArray(cs) ? cs : [cs]) {
-    if (c.element) {
+    if ("compound" in c) {
+      extractElements(c.compound).forEach((e) => res.add(e));
+    } else if (c.element) {
       res.add(c.element);
     } else {
-      for (const x of c.compound.map(tallyElements)) {
+      for (const x of c.group.map(tallyElements)) {
         for (const k of Object.keys(x)) {
           res.add(data.elements[k]);
         }
@@ -41,7 +50,7 @@ export const tallyElements = (c: Compound): Record<string, number> => {
     return { [c.element.symbol]: c.multi };
   } else {
     const res: Record<string, number> = {};
-    for (const x of c.compound.map(tallyElements)) {
+    for (const x of c.group.map(tallyElements)) {
       for (const k of Object.keys(x)) {
         res[k] = (res[k] || 0) + x[k];
       }
@@ -50,9 +59,12 @@ export const tallyElements = (c: Compound): Record<string, number> => {
   }
 };
 
-const balance = ({ left, right }: Equation) => {
-  const leftT = left.map((e) => tallyElements(setMulti(e, 1)));
-  const rightT = right.map((e) => tallyElements(setMulti(e, 1)));
+const balance = ({
+  left,
+  right,
+}: Equation): { left: number[]; right: number[] } => {
+  const leftT = left.terms.map((e) => tallyElements(e.compound));
+  const rightT = right.terms.map((e) => tallyElements(e.compound));
 
   const numberElements: Record<string, number> = {};
   let index = 0;
@@ -73,16 +85,16 @@ const balance = ({ left, right }: Equation) => {
   const solution = findIntegerSolution(rows);
 
   return {
-    left: left.map((_, i) => solution[i]),
-    right: right.map((_, i) => solution[left.length + i]),
+    left: left.terms.map((_, i) => solution[i]),
+    right: right.terms.map((_, i) => solution[left.terms.length + i]),
   };
 };
 
-export const toBalanced = (eq: Equation) => {
+export const toBalanced = (eq: Equation): Equation => {
   const { left, right } = balance(eq);
   return {
-    left: eq.left.map((c, i) => setMulti(c, left[i])),
-    right: eq.right.map((c, i) => setMulti(c, right[i])),
+    left: { terms: eq.left.terms.map((c, i) => setCount(c, left[i])) },
+    right: { terms: eq.right.terms.map((c, i) => setCount(c, right[i])) },
   };
 };
 
@@ -135,35 +147,36 @@ export const determineOxidations = (
       .map((o) => ({
         ...c,
         oxidation: o.ions,
-      }))
-      .filter((o) =>
-        typeof c.charge == "number" ? o.oxidation == c.charge : true
-      );
+      }));
+    // .filter((o) =>
+    //   typeof c.charge == "number" ? o.oxidation == c.charge : true
+    // );
   } else {
-    const possibilites: Compound[] = [{ ...c, compound: [] }];
+    const possibilities: Compound[] = [{ ...c, group: [] }];
 
-    for (const x of c.compound) {
-      const prev = possibilites.slice();
+    for (const x of c.group) {
+      const prev = possibilities.slice();
       for (const oxi of determineOxidations(x, includeUncommon)) {
         for (const p of prev) {
           // This can never happen
-          if (!p.compound) throw "It happened anyway";
-          possibilites.push({ ...p, compound: [...p.compound!, oxi] });
+          if (!p.group) throw "It happened anyway";
+          possibilities.push({ ...p, group: [...p.group!, oxi] });
         }
       }
-      possibilites.splice(0, prev.length);
+      possibilities.splice(0, prev.length);
     }
-    return possibilites
-      .map((o) => {
-        const oxidation = o.compound
-          ? o.compound.reduce((acc, x) => acc + x.multi * (x.oxidation || 0), 0)
+    return possibilities.map(
+      (o): Compound => {
+        const oxidation = o.group
+          ? o.group.reduce((acc, x) => acc + x.multi * (x.oxidation || 0), 0)
           : o.oxidation;
         return { ...o, oxidation };
-      })
-      .filter((o) =>
-        typeof c.charge == "number" ? o.oxidation == c.charge : true
-      );
+      }
+    );
+    // .filter((o) =>
+    //   typeof c.charge == "number" ? o.oxidation == c.charge : true
+    // );
   }
 };
 
-console.log(determineOxidations(parseCompound("HCl(NaO2ClP)2+")));
+// console.log(determineOxidations(parseCompound("HCl(NaO2ClP)2+")));

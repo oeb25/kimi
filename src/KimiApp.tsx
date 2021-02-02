@@ -9,11 +9,14 @@ import {
 } from "./calc";
 import {
   Compound,
-  latexCompoundTop,
+  latexFormula,
   parse,
   setMulti,
   Equation,
   latexCompound,
+  latexFormulaTerm,
+  FormulaTerm,
+  setCount,
 } from "./parse";
 import { Katex } from "./Katex";
 import { intersperse, keys, mapValues, values } from "./util";
@@ -28,9 +31,9 @@ export const KimiApp: React.FC<{}> = ({}) => {
   const [focus, setFocus] = React.useState<KimiElement[]>([]);
   const [showTable, setShowTable] = React.useState(false);
 
-  // const [input, setInput] = React.useState("TiCl4 + Mg = Ti + MgCl2");
+  const [input, setInput] = React.useState("TiCl4 + Mg = Ti + MgCl2");
   // const [input, setInput] = React.useState("HCOOH = HCOO- + H+");
-  const [input, setInput] = React.useState("C10H12N2O");
+  // const [input, setInput] = React.useState("C10H12N2O");
   // const [input, setInput] = React.useState("C");
   const parsed = React.useMemo(() => {
     try {
@@ -45,9 +48,9 @@ export const KimiApp: React.FC<{}> = ({}) => {
     if (!parsed) return setFocus([]);
 
     const compounds =
-      parsed.compound ||
-      parsed.formula ||
-      parsed.eq.left.concat(parsed.eq.right);
+      parsed.term?.compound ||
+      parsed.formula?.terms ||
+      parsed.eq?.left.terms.concat(parsed.eq.right.terms);
 
     if (!compounds) return setFocus([]);
 
@@ -69,11 +72,7 @@ export const KimiApp: React.FC<{}> = ({}) => {
   }, [parsed]);
 
   React.useEffect(() => {
-    if (
-      !parsed ||
-      (parsed?.compound?.compound?.length == 1 &&
-        parsed?.compound.compound[0].element)
-    ) {
+    if (!parsed || parsed?.term?.compound.element) {
       setShowTable(true);
     } else {
       setShowTable(false);
@@ -121,7 +120,7 @@ export const KimiApp: React.FC<{}> = ({}) => {
             <label className="italic text-gray-400">Cannot balance</label>
           ))}
       </div>
-      {parsed?.compound ? <CompoundInfo c={parsed.compound} /> : null}
+      {parsed?.term ? <CompoundInfo ft={parsed.term} /> : null}
       {parsed?.eq ? (
         <BalanceEquation eq={(doBalance && balanced) || parsed.eq} />
       ) : null}
@@ -143,17 +142,18 @@ export const KimiApp: React.FC<{}> = ({}) => {
         </details>
       )}
 
-      {parsed?.compound ? (
+      {parsed?.term ? (
         <details>
           <summary className="w-full outline-none cursor-pointer">
             Oxidation
           </summary>
 
           <div className="grid items-start grid-flow-col gap-4 justify-items-start">
-            {determineOxidations(parsed.compound)
+            {determineOxidations(parsed.term.compound)
               // .filter((c) => c.oxidation == 0)
               .map((c) => (
-                <Katex src={latexCompoundTop({ ...c, charge: c.oxidation })} />
+                <Katex src={latexCompound(c)} />
+                // <Katex src={latexFormula({ ...c, charge: c.oxidation })} />
               ))}
           </div>
         </details>
@@ -190,12 +190,18 @@ const newtonApproximate = (s: string, tolerance = 0.00000001) => {
 
     const maxCount = 1000;
 
+    // C6H12O6 + 6O2 = 6CO2 + 6H2O
+
     let deriv = fParsed;
     let degree = 0;
     while (!deriv.equals(mathjs.parse("0"))) {
       deriv = mathjs.derivative(deriv, "x");
       degree += 1;
-      if (degree > 10) throw "fuck degree explodes";
+      console.log(mathjs.format(deriv));
+      if (degree > 10) {
+        console.error(s);
+        throw "fuck degree explodes";
+      }
     }
 
     const results: number[] = [];
@@ -235,23 +241,25 @@ const newtonApproximate = (s: string, tolerance = 0.00000001) => {
 };
 
 const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
-  const numCols = eq.left.length + eq.right.length;
+  const numCols = eq.left.terms.length + eq.right.terms.length;
 
   const [initial, setInitial] = React.useState(
-    eq.left.concat(eq.right).map((x, i) => (i < 2 ? (0.75 as number) : 0))
+    eq.left.terms
+      .concat(eq.right.terms)
+      .map((x, i) => (i < 2 ? (0.75 as number) : 0))
   );
   const [equibConst, setEquibConst] = React.useState(56.3);
 
-  const denom = eq.left
+  const denom = eq.left.terms
     .map((c, i) => {
       const init = initial[i];
-      return `(${init} - ${c.multi}x)^${c.multi}`;
+      return `(${init} - ${c.count}x)^${c.count}`;
     })
     .join(" * ");
-  const num = eq.right
+  const num = eq.right.terms
     .map((c, i) => {
-      const init = initial[i + eq.left.length];
-      return `(${init} + ${c.multi}x)^${c.multi}`;
+      const init = initial[i + eq.left.terms.length];
+      return `(${init} + ${c.count}x)^${c.count}`;
     })
     .join(" * ");
   const frac = `(${num})/(${denom})`;
@@ -261,21 +269,22 @@ const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
   // const x = newtonApproximate(`${frac} - ${equibConst}`);
   const x = newtonApproximate(equationForX).filter((x) => x >= 0);
 
-  const foundItLeft = eq.left.findIndex(
+  const foundItLeft = eq.left.terms.findIndex(
     (c) =>
       c.charge == 1 &&
-      c.compound?.length === 0 &&
-      c.compound[0].element?.symbol == "H"
+      c.compound?.group?.length === 1 &&
+      // c.compound[0].charge == 1 &&
+      c.compound.group[0].element?.symbol == "H"
   );
-  const foundItRight = eq.right.findIndex(
+  const foundItRight = eq.right.terms.findIndex(
     (c) =>
-      c.compound?.length === 1 &&
-      c.compound[0].charge == 1 &&
-      c.compound[0].element?.symbol == "H"
+      c.compound?.group?.length === 1 &&
+      // c.compound[0].charge == 1 &&
+      c.compound.group[0].element?.symbol == "H"
   );
   console.log(foundItLeft, eq.left, foundItRight, eq.right);
 
-  const renderInitial = (c: Compound, side: "left" | "right", i: number) => (
+  const renderInitial = (c: FormulaTerm, side: "left" | "right", i: number) => (
     <UnitInput
       key={i}
       value={initial[i]}
@@ -286,21 +295,21 @@ const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
       unit="M"
     />
   );
-  const renderChange = (c: Compound, side: "left" | "right", i: number) => (
+  const renderChange = (c: FormulaTerm, side: "left" | "right", i: number) => (
     <UnitInput
       key={i}
-      value={`${side == "left" ? "-" : "+"}${c.multi}x`}
+      value={`${side == "left" ? "-" : "+"}${c.count}x`}
       placeholder="a"
       unit="M"
     />
   );
   const renderEquilibrium = (
-    c: Compound,
+    c: FormulaTerm,
     side: "left" | "right",
     i: number
   ) => (
     <UnitInput
-      value={initial[i] + (side == "left" ? -1 : 1) * c.multi * x[0]}
+      value={initial[i] + (side == "left" ? -1 : 1) * c.count * x[0]}
       placeholder="a"
       unit="M"
       key={i}
@@ -315,9 +324,9 @@ const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
       >
         <span></span>
         {intersperse(
-          eq.left.map((c, i) => (
+          eq.left.terms.map((c, i) => (
             <div key={i} className="text-center">
-              <Katex src={latexCompoundTop(c)} />
+              <Katex src={latexFormulaTerm(c)} />
             </div>
           )),
           (idx) => (
@@ -328,9 +337,9 @@ const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
         )}
         <Katex src={"="} />
         {intersperse(
-          eq.right.map((c, i) => (
+          eq.right.terms.map((c, i) => (
             <div key={i} className="text-center">
-              <Katex src={latexCompoundTop(c)} />
+              <Katex src={latexFormulaTerm(c)} />
             </div>
           )),
           (idx) => (
@@ -342,14 +351,16 @@ const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
 
         <span>Initial</span>
         {intersperse(
-          eq.left.map((c, i) => renderInitial(c, "left", i)),
+          eq.left.terms.map((c, i) => renderInitial(c, "left", i)),
           (idx) => (
             <span key={"sep-" + idx} />
           )
         )}
         <span />
         {intersperse(
-          eq.right.map((c, i) => renderInitial(c, "right", i + eq.left.length)),
+          eq.right.terms.map((c, i) =>
+            renderInitial(c, "right", i + eq.left.terms.length)
+          ),
           (idx) => (
             <span key={"sep-" + idx} />
           )
@@ -357,14 +368,16 @@ const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
 
         <span>Change</span>
         {intersperse(
-          eq.left.map((c, i) => renderChange(c, "left", i)),
+          eq.left.terms.map((c, i) => renderChange(c, "left", i)),
           (idx) => (
             <span key={"sep-" + idx} />
           )
         )}
         <span />
         {intersperse(
-          eq.right.map((c, i) => renderChange(c, "right", i + eq.left.length)),
+          eq.right.terms.map((c, i) =>
+            renderChange(c, "right", i + eq.left.terms.length)
+          ),
           (idx) => (
             <span key={"sep-" + idx} />
           )
@@ -372,15 +385,15 @@ const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
 
         <span>Equilibrium</span>
         {intersperse(
-          eq.left.map((c, i) => renderEquilibrium(c, "left", i)),
+          eq.left.terms.map((c, i) => renderEquilibrium(c, "left", i)),
           (idx) => (
             <span key={"sep-" + idx} />
           )
         )}
         <span />
         {intersperse(
-          eq.right.map((c, i) =>
-            renderEquilibrium(c, "right", i + eq.left.length)
+          eq.right.terms.map((c, i) =>
+            renderEquilibrium(c, "right", i + eq.left.terms.length)
           ),
           (idx) => (
             <span key={"sep-" + idx} />
@@ -400,7 +413,7 @@ const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
           <Katex src="x =" />
           <UnitInput placeholder="Solution for x" value={x as any} unit="M" />
         </div>
-        <Katex src={mathjs.parse(frac).toTex()} />
+        {/* <Katex src={mathjs.parse(frac).toTex()} /> */}
       </div>
     </div>
   );
@@ -490,13 +503,9 @@ const DataRow: React.FC<{ title: React.ReactChild; className?: string }> = ({
 const countMolesIn = (c: Compound) =>
   values(tallyElements(c)).reduce((a, b) => a + b, 0);
 
-const CompoundInfo: React.FC<{ c: Compound }> = ({ c }) => {
-  const e =
-    c.compound && c.compound.length == 1 && c.compound[0].element
-      ? c.compound[0]
-      : null;
-
-  const cData = e ? e.element : null;
+const CompoundInfo: React.FC<{ ft: FormulaTerm }> = ({ ft }) => {
+  const c = ft.compound;
+  const cData = c.element;
 
   const atomicMass = calculateAtomicMass([c]);
 
@@ -505,22 +514,22 @@ const CompoundInfo: React.FC<{ c: Compound }> = ({ c }) => {
 
   return (
     <div className="grid gap-2 place-items-center">
-      {c.compound && c.compound.length > 1 && (
+      {c.group && c.group.length > 1 && (
         <div
           className="grid pb-1 border-b border-gray-900 gap-x-4 place-items-end"
           style={{
-            gridTemplateColumns: `repeat(${c.compound!.length + 1}, auto)`,
+            gridTemplateColumns: `repeat(${c.group!.length + 1}, auto)`,
           }}
         >
           <span />
-          {c.compound!.map((c, i) => (
+          {c.group!.map((c, i) => (
             <div key={i} className="text-center place-self-center">
               <Katex src={latexCompound(c)} />
             </div>
           ))}
 
           <b className="text-right">Moles in 1 mol:</b>
-          {c.compound!.map((x, i) => (
+          {c.group!.map((x, i) => (
             <UnitInput
               key={i}
               placeholder="Ehh"
@@ -531,7 +540,7 @@ const CompoundInfo: React.FC<{ c: Compound }> = ({ c }) => {
           ))}
 
           <b>Atomic Mass:</b>
-          {c.compound!.map((c, i) => (
+          {c.group!.map((c, i) => (
             <UnitInput
               key={i}
               placeholder="Ehh"
@@ -541,7 +550,7 @@ const CompoundInfo: React.FC<{ c: Compound }> = ({ c }) => {
             />
           ))}
           <span />
-          {c.compound!.map((x, i) => (
+          {c.group!.map((x, i) => (
             <UnitInput
               key={i}
               placeholder="Ehh"
@@ -553,7 +562,7 @@ const CompoundInfo: React.FC<{ c: Compound }> = ({ c }) => {
         </div>
       )}
 
-      <Katex src={latexCompoundTop(c)} />
+      <Katex src={latexFormulaTerm(ft)} />
 
       <div
         className="grid text-right"
@@ -680,7 +689,7 @@ const ElectronConfigList: React.FC<{ base: KimiElement }> = ({ base }) => {
 };
 
 const BalanceEquation: React.FC<{
-  eq: { left: Compound[]; right: Compound[] };
+  eq: Equation;
 }> = ({ eq }) => {
   const [molesBases, setMolesBases] = React.useState<{
     [k: number]: { fixed: boolean; last: number };
@@ -719,10 +728,10 @@ const BalanceEquation: React.FC<{
   return (
     <div className="grid grid-flow-col-dense">
       {intersperse(
-        eq.left.map((c, i) => (
+        eq.left.terms.map((c, i) => (
           <CompoundMessure
             key={i}
-            c={c}
+            ft={c}
             molesBase={molesBase(i)}
             setMolesBase={(b) => setMolesBase(i, b)}
             fixed={fixed(i)}
@@ -736,14 +745,14 @@ const BalanceEquation: React.FC<{
       )}
       <Katex src="=" />
       {intersperse(
-        eq.right.map((c, i) => (
+        eq.right.terms.map((c, i) => (
           <CompoundMessure
             key={i}
-            c={c}
-            molesBase={molesBase(i + eq.left.length)}
-            setMolesBase={(b) => setMolesBase(i + eq.left.length, b)}
-            fixed={fixed(i + eq.left.length)}
-            setFixed={(f) => setFixed(i + eq.left.length, f)}
+            ft={c}
+            molesBase={molesBase(i + eq.left.terms.length)}
+            setMolesBase={(b) => setMolesBase(i + eq.left.terms.length, b)}
+            fixed={fixed(i + eq.left.terms.length)}
+            setFixed={(f) => setFixed(i + eq.left.terms.length, f)}
             molesBaseLimit={molesBaseLimit}
           />
         )),
@@ -755,23 +764,23 @@ const BalanceEquation: React.FC<{
   );
 };
 const CompoundMessure: React.FC<{
-  c: Compound;
+  ft: FormulaTerm;
   setMolesBase: (x: number) => void;
   fixed: boolean;
   setFixed: (x: boolean) => void;
   molesBase: number;
   molesBaseLimit: number;
-}> = ({ c, setMolesBase, molesBase, fixed, setFixed, molesBaseLimit }) => {
+}> = ({ ft, setMolesBase, molesBase, fixed, setFixed, molesBaseLimit }) => {
   const digits = 1000;
   const round = (x: number) => Math.round(x * digits) / digits;
-  const mass = React.useMemo(() => calculateAtomicMass([setMulti(c, 1)]), [c]);
+  const mass = React.useMemo(() => calculateAtomicMass([ft.compound]), [ft]);
 
-  const moles = molesBase * c.multi;
+  const moles = molesBase * ft.count;
   const grams = moles * mass;
 
   const setMoles = React.useCallback(
-    (moles: number) => setMolesBase(moles / c.multi),
-    [setMolesBase, c.multi, fixed]
+    (moles: number) => setMolesBase(moles / ft.count),
+    [setMolesBase, ft.count, fixed]
   );
   const setGrams = React.useCallback(
     (grams: number) => setMoles(grams / mass),
@@ -780,7 +789,7 @@ const CompoundMessure: React.FC<{
 
   return (
     <div className="flex flex-col items-center">
-      <Katex src={latexCompoundTop(c)} />
+      <Katex src={latexFormulaTerm(ft)} />
       <AnnotatedInput
         value={round(grams)}
         annotation="g"
@@ -801,7 +810,17 @@ const CompoundMessure: React.FC<{
           onChange={(e) => setFixed(e.target.checked)}
         />
       </label>
-      <p>Excess: {round((molesBase - molesBaseLimit) * c.multi * mass)}g</p>
+      {fixed ? (
+        <p className="flex justify-between w-full">
+          Excess:{" "}
+          <UnitInput
+            value={round((molesBase - molesBaseLimit) * ft.count * mass)}
+            unit="g"
+            placeholder=""
+            minWidth={true}
+          />
+        </p>
+      ) : null}
     </div>
   );
 };
