@@ -65,17 +65,16 @@ export const PeriodicTable: React.FC<{
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    console.log("RENDER!");
-
     canvas.width = canvas.parentElement!.clientWidth;
-    canvas.height = canvas.width / (40 / 15);
-    const ctx = canvas.getContext("2d")!;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const margin = 2;
     const width = (canvas.width - 17 * margin) / 18;
     const height = width;
+
+    canvas.height = (height + margin) * 7;
+
+    const ctx = canvas.getContext("2d")!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     canvas.onclick = (e) => {
       const col = Math.floor(e.offsetX / (width + margin) + 1);
