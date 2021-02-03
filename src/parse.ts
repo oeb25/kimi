@@ -197,7 +197,7 @@ export const latexFormulaTerm = (ft: FormulaTerm): string => {
       m +
       latexCompound(setMulti(ft.compound, 1)) +
       charge +
-      `_{x${ft.compound.multi}}`
+      `_{${ft.compound.multi}}`
     );
   } else if (
     ft.compound.group &&
