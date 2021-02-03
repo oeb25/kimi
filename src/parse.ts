@@ -197,7 +197,7 @@ export const latexFormulaTerm = (ft: FormulaTerm): string => {
       m +
       latexCompound(setMulti(ft.compound, 1)) +
       charge +
-      `_{${ft.compound.multi}}`
+      `_{x${ft.compound.multi}}`
     );
   } else if (
     ft.compound.group &&
@@ -212,7 +212,7 @@ export const latexFormulaTerm = (ft: FormulaTerm): string => {
         ),
       }) +
       charge +
-      `_{${ft.compound.multi}}`
+      `_{${ft.compound.group[ft.compound.group.length - 1].multi}}`
     );
   } else {
     return m + latexCompound(ft.compound) + charge;

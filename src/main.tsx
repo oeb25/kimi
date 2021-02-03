@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { KimiApp, Precision } from "./KimiApp";
+import { Precision } from "./components/UnitInput";
+import { KimiApp } from "./KimiApp";
 
 const App: React.FC<{}> = ({}) => {
   const [precision, setPrecision] = React.useState(3);
