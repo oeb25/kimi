@@ -99,10 +99,12 @@ const recurse = (s: string): [Compound, undefined | number] => {
   }
 };
 
-const parseCompound = (s: string): [Compound, undefined | number] => {
+const parseCompoundInternal = (s: string): [Compound, undefined | number] => {
   s = s.trim();
   return recurse(s);
 };
+export const parseCompound = (s: string): Compound =>
+  parseCompoundInternal(s)[0];
 
 export const parseFormulaTerm = (s: string): FormulaTerm => {
   s = s.trim();
@@ -111,7 +113,7 @@ export const parseFormulaTerm = (s: string): FormulaTerm => {
   const count = Number.isNaN(n) ? 1 : n;
   // TODO: Charge
   // const charge = 0;
-  const [compound, charge] = parseCompound(combi);
+  const [compound, charge] = parseCompoundInternal(combi);
   return { compound, count, charge };
 };
 export const parseFormula = (s: string): Formula => ({
@@ -174,50 +176,36 @@ export const latexCompound = (c: Compound): string => {
   }
 };
 
-// export const latexCompoundTop = (c: Compound): string => {
-//   const m = c.multi == 1 ? "" : c.multi;
-//   if (c.element) {
-//     return m + `\\text{${c.element.symbol}}`;
-//   } else {
-//     const self = c.compound.map(latexCompound).join(" ");
-//     return m + self + (c.oxidation ? `^{${c.oxidation}}` : "");
-//   }
-// };
 export const latexFormulaTerm = (ft: FormulaTerm): string => {
   const m = ft.count == 1 ? "" : ft.count;
   const charge = ft.charge
-    ? ft.charge == 1
-      ? "^+"
-      : ft.charge == -1
-      ? "^-"
-      : `^{${Math.abs(ft.charge)}${ft.charge > 0 ? "+" : "-"}}`
+    ? `^{${Math.abs(ft.charge) == 1 ? "" : Math.abs(ft.charge)}${
+        ft.charge > 0 ? "+" : "-"
+      }}`
     : "";
-  if (ft.compound.multi != 1) {
-    return (
-      m +
-      latexCompound(setMulti(ft.compound, 1)) +
-      charge +
-      `_{${ft.compound.multi}}`
-    );
-  } else if (
-    ft.compound.group &&
-    ft.compound.group[ft.compound.group.length - 1].multi != 1
-  ) {
+
+  const c = ft.compound;
+  const lastInGroup = c.group && c.group[c.group.length - 1];
+
+  if (c.multi != 1) {
+    return m + latexCompound(setMulti(c, 1)) + charge + `_{${c.multi}}`;
+  } else if (c.group && lastInGroup && lastInGroup.multi != 1) {
     return (
       m +
       latexCompound({
         multi: 1,
-        group: ft.compound.group.map((x, i) =>
-          i == ft.compound.group!.length - 1 ? setMulti(x, 1) : x
+        group: c.group.map((x, i) =>
+          i == c.group!.length - 1 ? setMulti(x, 1) : x
         ),
       }) +
       charge +
-      `_{${ft.compound.group[ft.compound.group.length - 1].multi}}`
+      `_{${lastInGroup.multi}}`
     );
   } else {
-    return m + latexCompound(ft.compound) + charge;
+    return m + latexCompound(c) + charge;
   }
 };
+
 export const latexFormula = (f: Formula): string =>
   f.terms.map(latexFormulaTerm).join(" + ");
 

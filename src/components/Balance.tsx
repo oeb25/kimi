@@ -1,6 +1,6 @@
 import * as React from "react";
 import { calculateAtomicMass } from "../calc";
-import { Katex } from "../Katex";
+import { Katex } from "./Katex";
 import { Equation, FormulaTerm, latexFormulaTerm } from "../parse";
 import { intersperse, mapValues, values } from "../util";
 import { AnnotatedInput, UnitInput } from "./UnitInput";

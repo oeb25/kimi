@@ -1,7 +1,7 @@
 import * as React from "react";
 import { toBalanced, extractElements, equibThing } from "./calc";
 import { parse, Equation, latexFormulaTerm, FormulaTerm } from "./parse";
-import { Katex } from "./Katex";
+import { Katex } from "./components/Katex";
 import { intersperse } from "./util";
 import { KimiElement } from "./data";
 import { PeriodicTable } from "./PeriodicTable";
@@ -104,33 +104,16 @@ export const KimiApp: React.FC<{}> = ({}) => {
             <label className="italic text-gray-400">Cannot balance</label>
           ))}
       </div>
-      {parsed?.term ? <CompoundInfo ft={parsed.term} /> : null}
-      {parsed?.eq ? (
+      {parsed?.term && <CompoundInfo ft={parsed.term} />}
+      {parsed?.eq && (
         <BalanceEquation eq={(doBalance && balanced) || parsed.eq} />
-      ) : null}
+      )}
 
-      {/* <details>
-        <summary className="w-full outline-none cursor-pointer">
-          Equilibrium
-        </summary>
-
-        <Equilibrium />
-      </details> */}
       {parsed?.eq && (
         <Section title="Equilibrium">
           <Equilibrium2 eq={(doBalance && balanced) || parsed.eq} />
         </Section>
       )}
-
-      {/* {parsed?.term ? (
-        <details>
-          <summary className="w-full outline-none cursor-pointer">
-            Oxidation
-          </summary>
-
-          <Oxidation c={parsed.term.compound} />
-        </details>
-      ) : null} */}
 
       {parsed?.term && (
         <Section title="Oxidation">
@@ -150,22 +133,6 @@ export const KimiApp: React.FC<{}> = ({}) => {
       >
         <PeriodicTable focus={focus} onClick={onClickElement} />
       </Section>
-
-      {/* <details
-        open={showTable}
-        onClick={() => {
-          setFocus([]);
-          requestAnimationFrame(() => {
-            setFocus(focus);
-          });
-        }}
-        // className={showTable ? "" : "pointer-events-none h-0"}
-      >
-        <summary className="w-full outline-none cursor-pointer">
-          Periodic Table
-        </summary>
-        <PeriodicTable focus={focus} onClick={onClickElement} />
-      </details> */}
     </div>
   );
 };
@@ -182,15 +149,13 @@ const Section: React.FC<{
   }, [setInternalOpen, open]);
 
   return (
-    <details
-      open={open}
-      onClick={onClick}
-      // className={showTable ? "" : "pointer-events-none h-0"}
-    >
+    <details open={open} onClick={onClick}>
       <summary
         className="w-full outline-none cursor-pointer"
         onClick={(e) => {
-          setInternalOpen((e) => !e);
+          const didOpen = !((e.target as HTMLElement)
+            .parentElement as HTMLDetailsElement).open;
+          setInternalOpen(didOpen);
         }}
       >
         {title}

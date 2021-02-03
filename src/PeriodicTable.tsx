@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mapValues } from "./util";
 import * as data from "./data";
-import { Katex } from "./Katex";
+import { Katex } from "./components/Katex";
 
 const groupColor = {
   nonmetal: "bg-purple-800",

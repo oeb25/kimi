@@ -1,13 +1,6 @@
 import * as data from "./data";
 import { findIntegerSolution } from "./matrix";
-import {
-  Compound,
-  Equation,
-  Formula,
-  FormulaTerm,
-  setCount,
-  setMulti,
-} from "./parse";
+import { Compound, Equation, FormulaTerm, setCount } from "./parse";
 import { keys, mapValues } from "./util";
 
 const ERROR_FACTOR = 1000000000;
@@ -123,60 +116,4 @@ const solveQuadratic = (a: number, b: number, c: number) => {
   }
 };
 
-console.log(equibThing(0.25, 1.4e-11, 0, 0));
-
-/** OXIDATION */
-
-// interface Oxidation {
-//   compound: Compound,
-//   o
-// }
-
-// LaTeX for oxidation indication \stackrel{!}{=}
-
-export const determineOxidations = (
-  c: Compound,
-  includeUncommon: boolean = false
-): Compound[] => {
-  // If the parsed compound has a fixed oxidation respect it
-  // if (typeof c.charge == "number") return [{ ...c, oxidation: c.charge }];
-
-  if (c.element) {
-    return c.element.oxidationStates
-      .filter((o) => includeUncommon || o.common)
-      .map((o) => ({
-        ...c,
-        oxidation: o.ions,
-      }));
-    // .filter((o) =>
-    //   typeof c.charge == "number" ? o.oxidation == c.charge : true
-    // );
-  } else {
-    const possibilities: Compound[] = [{ ...c, group: [] }];
-
-    for (const x of c.group) {
-      const prev = possibilities.slice();
-      for (const oxi of determineOxidations(x, includeUncommon)) {
-        for (const p of prev) {
-          // This can never happen
-          if (!p.group) throw "It happened anyway";
-          possibilities.push({ ...p, group: [...p.group!, oxi] });
-        }
-      }
-      possibilities.splice(0, prev.length);
-    }
-    return possibilities.map(
-      (o): Compound => {
-        const oxidation = o.group
-          ? o.group.reduce((acc, x) => acc + x.multi * (x.oxidation || 0), 0)
-          : o.oxidation;
-        return { ...o, oxidation };
-      }
-    );
-    // .filter((o) =>
-    //   typeof c.charge == "number" ? o.oxidation == c.charge : true
-    // );
-  }
-};
-
-// console.log(determineOxidations(parseCompound("HCl(NaO2ClP)2+")));
+// console.log(equibThing(0.25, 1.4e-11, 0, 0));

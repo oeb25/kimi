@@ -1,12 +1,8 @@
 import * as React from "react";
 import * as data from "../data";
-import {
-  calculateAtomicMass,
-  determineOxidations,
-  tallyElements,
-} from "../calc";
+import { calculateAtomicMass, tallyElements } from "../calc";
 import { KimiElement } from "../data";
-import { Katex } from "../Katex";
+import { Katex } from "./Katex";
 import {
   Compound,
   FormulaTerm,

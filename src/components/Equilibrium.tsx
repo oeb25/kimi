@@ -3,7 +3,7 @@ import * as mathjs from "mathjs";
 import { Equation, FormulaTerm, latexFormulaTerm } from "../parse";
 import { UnitInput } from "./UnitInput";
 import { intersperse } from "../util";
-import { Katex } from "../Katex";
+import { Katex } from "./Katex";
 import { equibThing } from "../calc";
 
 const newtonApproximate = (s: string, tolerance = 0.00000001) => {
