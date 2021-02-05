@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Katex } from "./Katex";
 import { Compound, latexFormulaTerm } from "../parse";
-import { deuteronMassDependencies } from "mathjs";
 
 export const Oxidation: React.FC<{ c: Compound }> = ({ c }) => {
   const [targetOxidationStr, setTargetOxidationStr] = React.useState("0");

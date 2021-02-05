@@ -4,7 +4,7 @@ import source1Raw from "./sources/source1.json";
 import source2Raw from "./sources/source2.json";
 /* @ts-ignore */
 import oxidationStatesRaw from "./sources/oxidationStates.json";
-import { keys, mapValues } from "./util";
+import { keys } from "./util";
 
 const source1 = source1Raw as readonly ElementSource1[];
 const source2 = source2Raw as readonly ElementSource2[];

@@ -88,7 +88,6 @@ export const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
       return `(${init} + ${c.count}x)^${c.count}`;
     })
     .join(" * ");
-  const frac = `(${num})/(${denom})`;
 
   const equationForX = `${equibConst} * (${denom}) - (${num})`;
 
@@ -110,7 +109,11 @@ export const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
   );
   console.log(foundItLeft, eq.left, foundItRight, eq.right);
 
-  const renderInitial = (c: FormulaTerm, side: "left" | "right", i: number) => (
+  const renderInitial = (
+    _c: FormulaTerm,
+    _side: "left" | "right",
+    i: number
+  ) => (
     <UnitInput
       key={i}
       value={initial[i]}
@@ -155,11 +158,9 @@ export const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
               <Katex src={latexFormulaTerm(c)} />
             </div>
           )),
-          (idx) => (
-            <div key={"sep-" + idx} className="text-center">
-              <Katex src="+" />
-            </div>
-          )
+          <div className="text-center">
+            <Katex src="+" />
+          </div>
         )}
         <Katex src={"="} />
         {intersperse(
@@ -168,62 +169,48 @@ export const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
               <Katex src={latexFormulaTerm(c)} />
             </div>
           )),
-          (idx) => (
-            <div key={"sep-" + idx} className="text-center">
-              <Katex src="+" />
-            </div>
-          )
+          <div className="text-center">
+            <Katex src="+" />
+          </div>
         )}
 
         <span>Initial</span>
         {intersperse(
           eq.left.terms.map((c, i) => renderInitial(c, "left", i)),
-          (idx) => (
-            <span key={"sep-" + idx} />
-          )
+          <span />
         )}
         <span />
         {intersperse(
           eq.right.terms.map((c, i) =>
             renderInitial(c, "right", i + eq.left.terms.length)
           ),
-          (idx) => (
-            <span key={"sep-" + idx} />
-          )
+          <span />
         )}
 
         <span>Change</span>
         {intersperse(
           eq.left.terms.map((c, i) => renderChange(c, "left", i)),
-          (idx) => (
-            <span key={"sep-" + idx} />
-          )
+          <span />
         )}
         <span />
         {intersperse(
           eq.right.terms.map((c, i) =>
             renderChange(c, "right", i + eq.left.terms.length)
           ),
-          (idx) => (
-            <span key={"sep-" + idx} />
-          )
+          <span />
         )}
 
         <span>Equilibrium</span>
         {intersperse(
           eq.left.terms.map((c, i) => renderEquilibrium(c, "left", i)),
-          (idx) => (
-            <span key={"sep-" + idx} />
-          )
+          <span />
         )}
         <span />
         {intersperse(
           eq.right.terms.map((c, i) =>
             renderEquilibrium(c, "right", i + eq.left.terms.length)
           ),
-          (idx) => (
-            <span key={"sep-" + idx} />
-          )
+          <span />
         )}
       </div>
       <div className="flex items-start">

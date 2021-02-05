@@ -1,3 +1,5 @@
+import * as React from "react";
+
 export function keys<T>(t: T): (keyof T)[] {
   return Object.keys(t) as (keyof T)[];
 }
@@ -17,12 +19,12 @@ export function mapValues<T>(
   return out;
 }
 
-export const intersperse = <T, E>(xs: T[], e: (idx: number) => E) => {
+export const intersperse = <T>(xs: T[], e: React.ReactElement) => {
   const out = [];
   for (let i = 0; i < xs.length; i++) {
     out.push(xs[i]);
     if (i + 1 != xs.length) {
-      out.push(e(i));
+      out.push(React.cloneElement(e, { key: `interspersed-${i}` }));
     }
   }
   return out;

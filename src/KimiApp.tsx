@@ -1,11 +1,8 @@
 import * as React from "react";
-import { toBalanced, extractElements, equibThing } from "./calc";
-import { parse, Equation, latexFormulaTerm, FormulaTerm } from "./parse";
-import { Katex } from "./components/Katex";
-import { intersperse } from "./util";
+import { toBalanced, extractElements } from "./calc";
+import { parse } from "./parse";
 import { KimiElement } from "./data";
 import { PeriodicTable } from "./PeriodicTable";
-import * as mathjs from "mathjs";
 import { Oxidation } from "./components/Oxidation";
 import { CompoundInfo } from "./components/CompoundInfo";
 import { BalanceEquation } from "./components/Balance";

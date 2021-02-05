@@ -26,7 +26,7 @@ export const BalanceEquation: React.FC<{
   const setMolesBase = React.useCallback(
     (i: number, molesBase: number) =>
       setMolesBases((prev) => ({
-        ...mapValues(prev, (k, v) =>
+        ...mapValues(prev, (_k, v) =>
           v.fixed ? { ...v } : { ...v, last: molesBase }
         ),
         [i]: { ...prev[i], last: molesBase },
@@ -56,9 +56,7 @@ export const BalanceEquation: React.FC<{
             molesBaseLimit={molesBaseLimit}
           />
         )),
-        (i) => (
-          <Katex src="+" key={"plus-" + i} />
-        )
+        <Katex src="+" />
       )}
       <Katex src="=" />
       {intersperse(
@@ -73,9 +71,7 @@ export const BalanceEquation: React.FC<{
             molesBaseLimit={molesBaseLimit}
           />
         )),
-        (i) => (
-          <Katex src="+" key={"plus-" + i} />
-        )
+        <Katex src="+" />
       )}
     </div>
   );

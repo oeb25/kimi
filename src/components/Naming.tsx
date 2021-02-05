@@ -1,5 +1,5 @@
 import { Compound, parseCompound } from "../parse";
-import { oxidate, Oxidation } from "./Oxidation";
+import { oxidate } from "./Oxidation";
 
 const suffixTable = [
   null,
@@ -50,7 +50,7 @@ export const nameCompound = (c: Compound, first = true): string => {
         : "")
     );
   } else {
-    return c.group.map((x, i) => nameCompound(x, false)).join(" ");
+    return c.group.map((x) => nameCompound(x, false)).join(" ");
   }
 };
 
