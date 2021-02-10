@@ -2,6 +2,7 @@ import * as React from "react";
 import * as mathjs from "mathjs";
 
 mathjs.createUnit("amu", "0.000000000000000000000001660539g");
+mathjs.createUnit("M", "1 mol/l");
 const Na = mathjs.evaluate("6.02214076e23 mol^-1");
 
 export const Calculator: React.FC<{ precision: number }> = ({ precision }) => {

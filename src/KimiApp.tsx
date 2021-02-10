@@ -51,22 +51,43 @@ export const KimiApp: React.FC<{}> = ({}) => {
   const inSolvent = React.useMemo<typeof parsed>(() => {
     if (!parsed || !parsed.eq) return parsed;
 
-    let eq = parsed.eq;
+    let { left, right } = parsed.eq;
+
+    const leftCharge = left.terms.reduce((c, t) => c + (t.charge || 0), 0);
+    const rightCharge = right.terms.reduce((c, t) => c + (t.charge || 0), 0);
 
     if (soulvent == "acidic") {
-      return {
-        eq: {
-          left: { terms: [parseFormulaTerm("H+"), ...eq.left.terms] },
-          right: { terms: [...eq.right.terms, parseFormulaTerm("H2O")] },
-        },
-      };
+      if (leftCharge > rightCharge) {
+        return {
+          eq: {
+            left: { terms: [...left.terms, parseFormulaTerm("H2O")] },
+            right: { terms: [parseFormulaTerm("H+"), ...right.terms] },
+          },
+        };
+      } else {
+        return {
+          eq: {
+            left: { terms: [parseFormulaTerm("H+"), ...left.terms] },
+            right: { terms: [...right.terms, parseFormulaTerm("H2O")] },
+          },
+        };
+      }
     } else if (soulvent == "basic") {
-      return {
-        eq: {
-          left: { terms: [parseFormulaTerm("H2O"), ...eq.left.terms] },
-          right: { terms: [...eq.right.terms, parseFormulaTerm("OH-")] },
-        },
-      };
+      if (leftCharge > rightCharge) {
+        return {
+          eq: {
+            left: { terms: [...left.terms, parseFormulaTerm("OH-")] },
+            right: { terms: [parseFormulaTerm("H2O"), ...right.terms] },
+          },
+        };
+      } else {
+        return {
+          eq: {
+            left: { terms: [parseFormulaTerm("H2O"), ...left.terms] },
+            right: { terms: [...right.terms, parseFormulaTerm("OH-")] },
+          },
+        };
+      }
     } else {
       return parsed;
     }
