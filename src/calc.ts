@@ -73,6 +73,12 @@ const balance = ({
   const rows = keys(numberElements).map((e) =>
     leftT.map((l) => l[e] || 0).concat(rightT.map((l) => -l[e] || 0).concat(0))
   );
+  // Add oxidation row
+  rows.push(
+    left.terms
+      .map((t) => t.charge || 0)
+      .concat(right.terms.map((t) => -(t.charge || 0)).concat(0))
+  );
   rows.push(rows[0].map(() => 0));
 
   const solution = findIntegerSolution(rows);
@@ -115,5 +121,3 @@ const solveQuadratic = (a: number, b: number, c: number) => {
     return null;
   }
 };
-
-// console.log(equibThing(0.25, 1.4e-11, 0, 0));

@@ -116,8 +116,6 @@ const approxRational = (x: number) => {
   return [sign * a, b] as const;
 };
 
-console.log(approxRational(2 / 3));
-
 export const findIntegerSolution = (matrix: number[][]) => {
   const eliminated = gaussJordanEliminate(matrix);
   const numRows = eliminated.length;
@@ -142,21 +140,25 @@ export const findIntegerSolution = (matrix: number[][]) => {
   eliminated[numRows - 1][i] = 1;
   eliminated[numRows - 1][numCols - 1] = 1;
 
-  let coefs = extractCoefficients(gaussJordanEliminate(eliminated));
+  let coefficients = extractCoefficients(gaussJordanEliminate(eliminated));
 
   let iterLeft = 10;
 
-  console.log("first");
-  console.log(coefs);
-  while (coefs.find((c) => (c | 0) != c) && iterLeft-- > 0) {
-    const scale = Math.min(...coefs.filter((c) => (c | 0) != c));
-    const [a, b] = approxRational(scale);
-    // coefs = coefs.map((c) => c / scale);
-    coefs = coefs.map((c) => c * b);
-    console.log(coefs);
+  while (coefficients.find((c) => (c | 0) != c) && iterLeft-- > 0) {
+    const scale = Math.min(...coefficients.filter((c) => (c | 0) != c));
+    const [, b] = approxRational(scale);
+    coefficients = coefficients.map(
+      (c) => Math.round(1000000 * c * b) / 1000000
+    );
   }
 
-  return coefs;
+  if (iterLeft == 0) {
+    console.error("did not approximate");
+  }
+
+  console.log(coefficients);
+
+  return coefficients.map((x) => Math.round(x * 100) / 100);
 };
 
 function extractCoefficients(matrix: number[][]): Array<number> {
@@ -170,13 +172,13 @@ function extractCoefficients(matrix: number[][]): Array<number> {
   for (let i = 0; i < cols - 1; i++)
     lcm = (lcm / gcd(lcm, matrix[i][i])) * matrix[i][i];
 
-  let coefs: Array<number> = [];
-  let allzero = true;
+  let coefficients: Array<number> = [];
+  let allZero = true;
   for (let i = 0; i < cols - 1; i++) {
-    const coef = (lcm / matrix[i][i]) * matrix[i][cols - 1];
-    coefs.push(coef);
-    allzero = allzero && coef == 0;
+    const coefficient = (lcm / matrix[i][i]) * matrix[i][cols - 1];
+    coefficients.push(coefficient);
+    allZero = allZero && coefficient == 0;
   }
-  if (allzero) throw "Assertion error: All-zero solution";
-  return coefs;
+  if (allZero) throw "Assertion error: All-zero solution";
+  return coefficients;
 }

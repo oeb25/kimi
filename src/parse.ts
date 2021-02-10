@@ -14,15 +14,12 @@ type Base = {
   multi: number;
 };
 
-type Voided<T> = { [K in keyof T]?: undefined };
+type Voided<T, S> = Omit<{ [K in keyof S]?: undefined }, keyof T> & T;
 
 type Group = { group: Compound[]; oxidation?: number };
 type Molecule = { element: KimiElement; oxidation?: number };
 
-export type Compound = (
-  | (Omit<Voided<Molecule>, keyof Group> & Group)
-  | (Omit<Voided<Group>, keyof Molecule> & Molecule)
-) &
+export type Compound = (Voided<Molecule, Group> | Voided<Group, Molecule>) &
   Base;
 
 export type Equation = { left: Formula; right: Formula };
