@@ -4,7 +4,6 @@ import source1Raw from "./sources/source1.json";
 import source2Raw from "./sources/source2.json";
 /* @ts-ignore */
 import oxidationStatesRaw from "./sources/oxidationStates.json";
-import { keys } from "./util";
 
 const source1 = source1Raw as readonly ElementSource1[];
 const source2 = source2Raw as readonly ElementSource2[];
@@ -244,69 +243,3 @@ const table = {
     ],
   },
 };
-
-const createModel = <T>(
-  operations: {
-    [K in keyof T]: {
-      [Q in keyof T]: (b: T[Q], rest: T) => T[K];
-    };
-  }
-) => {
-  const change = <K extends keyof T>(prev: T, k: K, v: T[K]) => {
-    const next = { ...prev };
-
-    let didChange = true;
-    let i = 0;
-
-    while (didChange) {
-      didChange = false;
-
-      keys(prev).map((k2) => {
-        const newValue = operations[k2][k](v, next);
-        // TODO: Proper eq
-        if (next[k2] != newValue) didChange = true;
-
-        next[k2] = newValue;
-      });
-    }
-    return next;
-  };
-
-  return change;
-};
-
-const myModel = createModel<{ a: number; b: number; c: number; d: number }>({
-  a: {
-    a: (a) => a,
-    b: (b) => b / 2,
-    c: (c, rest) => c / rest.b,
-    d: (d, rest) => d - (rest.b + rest.c),
-  },
-  b: {
-    b: (b) => b,
-    a: (a) => a * 2,
-    c: (c, rest) => c / rest.a,
-    d: (d, rest) => d - (rest.a + rest.c),
-  },
-  c: {
-    c: (c) => c,
-    a: (a, rest) => a * rest.b,
-    b: (b, rest) => b * rest.a,
-    d: (d, rest) => d - (rest.a + rest.b),
-  },
-  d: {
-    d: (d) => d,
-    a: (a, { b, c }) => a + b + c,
-    b: (b, { a, c }) => a + b + c,
-    c: (c, { a, b }) => a + b + c,
-  },
-});
-
-const m1 = { a: 0, b: 0, c: 0, d: 0 };
-const m2 = myModel(m1, "a", 5);
-const m3 = myModel(m2, "c", 3);
-const m4 = myModel(m3, "b", 19);
-console.log(m1);
-console.log(m2);
-console.log(m3);
-console.log(m4);

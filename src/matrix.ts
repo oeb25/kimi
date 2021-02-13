@@ -1,3 +1,5 @@
+import * as mathjs from "mathjs";
+
 const simplifyRow = (row: number[]) => {
   let factor = 0;
   return row.map((x) => {
@@ -12,22 +14,126 @@ const simplifyRow = (row: number[]) => {
   });
 };
 
-const swapRows = (matrix: number[][], i: number, j: number) => {
-  if (i == j) return matrix;
+const reducedRowEchelonForm = (matrix: number[][]) => {
+  // Copy matrix
+  matrix = matrix.map((row) => row.slice(0));
 
-  i = Math.min(i, j);
-  j = Math.max(i, j);
-  return [
-    ...matrix.slice(0, i),
-    matrix[j],
-    ...matrix.slice(i + 1, j),
-    matrix[i],
-    ...matrix.slice(j + 1),
-  ];
+  const numCols = matrix[0].length;
+
+  // Eliminate downwards
+  for (const [row, i] of matrix.map((row, i) => [row, i] as const)) {
+    const firstNonZero = row.findIndex((x) => x != 0);
+
+    if (firstNonZero == -1) continue;
+
+    // All succeeding rows
+    for (const other of matrix.slice(i + 1)) {
+      const factor = other[firstNonZero] / row[firstNonZero];
+
+      for (let j = firstNonZero; j < numCols; j++) {
+        other[j] -= row[j] * factor;
+      }
+    }
+  }
+
+  // Eliminate upwards
+  for (const [row, i] of matrix.map((row, i) => [row, i] as const)) {
+    const firstNonZero = row.findIndex((x) => x != 0);
+
+    if (firstNonZero == -1) continue;
+
+    // All preceding rows
+    for (const other of matrix.slice(0, i)) {
+      const factor = other[firstNonZero] / row[firstNonZero];
+
+      for (let j = firstNonZero; j < numCols; j++) {
+        other[j] -= row[j] * factor;
+      }
+    }
+  }
+
+  const rref = matrix.map(simplifyRow);
+
+  // Permute rows to get upper right triangle
+  return sortByKey(rref, (row) => {
+    const idx = row.findIndex((x) => x != 0);
+    return idx >= 0 ? idx : Infinity;
+  });
 };
 
-const addRows = (a: number[], b: number[]) => a.map((x, i) => x + b[i]);
-const multiplyRow = (a: number[], s: number) => a.map((x) => x * s);
+const nullSpace = (matrix: number[][]) => {
+  const numRows = matrix.length;
+  const numCols = matrix[0].length;
+
+  const rref = reducedRowEchelonForm(matrix);
+
+  let rank = rref.findIndex((row) => all(row, (x) => x == 0));
+  if (rank == -1) rank = numRows;
+
+  // Remove zero rows
+  rref.splice(rank);
+
+  // Determine the vectors spanning the null space of the matrix
+  const span = range(rank, numCols).map((col) =>
+    rref
+      .map((row) => -row[col])
+      .concat(range(rank, numCols).map((j) => (col == j ? 1 : 0)))
+      .map((x) => mathjs.round(x, 10))
+  );
+
+  if (span.length == 0) {
+    console.log(rref);
+  }
+
+  return span;
+};
+
+export const findIntegerSolutions = (matrix: number[][]) => {
+  const span = nullSpace(matrix);
+
+  if (span.length == 0) {
+    console.log("span", span);
+    throw "No solutions: Solutions space has dim 0";
+  }
+
+  const dims = span[0].length;
+
+  const seenIds = new Set();
+
+  let i = 1;
+
+  return (function* () {
+    while (i++ < 1000) {
+      const factors = enumerate(i, span.length);
+
+      const gcdFactors = factors.reduce(gcd);
+
+      const id = factors.map((f) => f / gcdFactors).join(":");
+
+      if (seenIds.has(id)) continue;
+
+      const coefficients = range(0, dims).map((col) =>
+        factors.reduce((acc, f, row) => acc + f * span[row][col], 0)
+      );
+      // If any coefficient is negative or non-integer, throw away the solution
+      if (any(coefficients, (x) => x <= 0 || !Number.isInteger(x))) continue;
+      seenIds.add(id);
+      yield coefficients.map((x) => x | 0);
+    }
+
+    if (seenIds.size == 0) {
+      console.log(span);
+      throw "No solutions found";
+    }
+  })();
+};
+
+const enumerate = (i: number, dimensions: number): readonly number[] => {
+  if (dimensions == 1) return [i];
+  if (dimensions == 2) return P(i);
+  throw "Too many independent solutions (currently only supports two free variables)";
+};
+
 const gcd = (x: number, y: number) => {
   if (typeof x != "number" || typeof y != "number" || isNaN(x) || isNaN(y))
     throw "Invalid argument";
@@ -41,144 +147,20 @@ const gcd = (x: number, y: number) => {
   return x;
 };
 
-// Changes this matrix to reduced row echelon form (RREF), except that each leading coefficient is not necessarily 1. Each row is simplified.
-const gaussJordanEliminate = (matrix: number[][]) => {
-  const numRows = matrix.length;
-  const numCols = matrix[0].length;
+const range = (a: number, b: number) =>
+  new Array(b - a).fill(0).map((_x, i) => i + a);
 
-  // Simplify all rows
-  matrix = matrix.map(simplifyRow);
+const L = (k: number) => Math.floor(1 / 2 + Math.sqrt(2 * k - 1));
+const M = (k: number) => k - ((L(k) - 1) * L(k)) / 2;
+const P = (k: number) => [M(k), 1 + L(k) - M(k)] as const;
 
-  // Compute row echelon form (REF)
-  let numPivots = 0;
-  for (let i = 0; i < numCols; i++) {
-    // Find pivot
-    let pivotRow = numPivots;
-    while (pivotRow < numRows && matrix[pivotRow][i] == 0) pivotRow++;
-    if (pivotRow == numRows) continue;
-    const pivot = matrix[pivotRow][i];
-    matrix = swapRows(matrix, numPivots, pivotRow);
-    numPivots++;
+const any = <T>(xs: T[], f: (x: T, index: number) => boolean) =>
+  xs.findIndex(f) >= 0;
+const all = <T>(xs: T[], f: (x: T, index: number) => boolean) =>
+  xs.findIndex((x, i) => !f(x, i)) == -1;
 
-    // Eliminate below
-    for (let j = numPivots; j < numRows; j++) {
-      const g = gcd(pivot, matrix[j][i]);
-      matrix[j] = simplifyRow(
-        addRows(
-          multiplyRow(matrix[j], pivot / g),
-          multiplyRow(matrix[i], -matrix[j][i] / g)
-        )
-      );
-    }
-  }
-
-  // Compute reduced row echelon form (RREF), but the leading coefficient need not be 1
-  for (let i = numRows - 1; i >= 0; i--) {
-    // Find pivot
-    let pivotCol = 0;
-    while (pivotCol < numCols && matrix[i][pivotCol] == 0) pivotCol++;
-    if (pivotCol == numCols) continue;
-    const pivot = matrix[i][pivotCol];
-
-    // Eliminate above
-    for (let j = i - 1; j >= 0; j--) {
-      const g = gcd(pivot, matrix[j][pivotCol]);
-      matrix[j] = simplifyRow(
-        addRows(
-          multiplyRow(matrix[j], pivot / g),
-          multiplyRow(matrix[i], -matrix[j][pivotCol] / g)
-        )
-      );
-    }
-  }
-
-  return matrix;
-};
-
-const approxRational = (x: number) => {
-  const sign = Math.sign(x);
-  x = Math.abs(x);
-
-  let a = 1;
-  let b = 1;
-
-  let delta = a / b - x;
-
-  while (Math.abs(delta) > 0.0001) {
-    if (delta > 0) {
-      b += 1;
-    } else {
-      a += 1;
-    }
-    delta = a / b - x;
-  }
-
-  return [sign * a, b] as const;
-};
-
-export const findIntegerSolution = (matrix: number[][]) => {
-  const eliminated = gaussJordanEliminate(matrix);
-  const numRows = eliminated.length;
-  const numCols = eliminated[0].length;
-
-  function countNonzeroCoeffs(matrix: number[][], row: number): number {
-    let count = 0;
-    for (let i = 0; i < numCols; i++) {
-      if (matrix[row][i] != 0) count++;
-    }
-    return count;
-  }
-
-  // Find row with more than one non-zero coefficient
-  let i;
-  for (i = 0; i < numRows - 1; i++) {
-    if (countNonzeroCoeffs(eliminated, i) > 1) break;
-  }
-  if (i == numRows - 1) throw "All-zero solution"; // Unique solution with all coefficients zero
-
-  // Add an inhomogeneous equation
-  eliminated[numRows - 1][i] = 1;
-  eliminated[numRows - 1][numCols - 1] = 1;
-
-  let coefficients = extractCoefficients(gaussJordanEliminate(eliminated));
-
-  let iterLeft = 10;
-
-  while (coefficients.find((c) => (c | 0) != c) && iterLeft-- > 0) {
-    const scale = Math.min(...coefficients.filter((c) => (c | 0) != c));
-    const [, b] = approxRational(scale);
-    coefficients = coefficients.map(
-      (c) => Math.round(1000000 * c * b) / 1000000
-    );
-  }
-
-  if (iterLeft == 0) {
-    console.error("did not approximate");
-  }
-
-  console.log(coefficients);
-
-  return coefficients.map((x) => Math.round(x * 100) / 100);
-};
-
-function extractCoefficients(matrix: number[][]): Array<number> {
-  const rows: number = matrix.length;
-  const cols: number = matrix[0].length;
-
-  if (cols - 1 > rows || matrix[cols - 2][cols - 2] == 0)
-    throw "Multiple independent solutions";
-
-  let lcm = 1;
-  for (let i = 0; i < cols - 1; i++)
-    lcm = (lcm / gcd(lcm, matrix[i][i])) * matrix[i][i];
-
-  let coefficients: Array<number> = [];
-  let allZero = true;
-  for (let i = 0; i < cols - 1; i++) {
-    const coefficient = (lcm / matrix[i][i]) * matrix[i][cols - 1];
-    coefficients.push(coefficient);
-    allZero = allZero && coefficient == 0;
-  }
-  if (allZero) throw "Assertion error: All-zero solution";
-  return coefficients;
-}
+const sortByKey = <T>(xs: T[], cmp: (x: T) => number) =>
+  xs
+    .map((x) => [cmp(x), x] as const)
+    .sort(([a], [b]) => a - b)
+    .map(([, x]) => x);

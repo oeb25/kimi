@@ -123,13 +123,46 @@ const determineOxidations = (
     includeUncommon?: boolean;
     target?: number;
   } = {}
-): { oxidations: number[]; charge: number }[] =>
-  cartesianProduct(oxidationSelection(c, includeUncommon))
+): { oxidations: number[]; charge: number }[] => {
+  /*
+  // Hydrogen in a binary composition with metal:
+  if (
+    c.group &&
+    c.group.length == 2 &&
+    ((c.group[0].element?.symbol == "H" &&
+      c.group[0].multi == 1 &&
+      c.group[1].element?.metal) ||
+      (c.group[1].element?.symbol == "H" &&
+        c.group[1].multi == 1 &&
+        c.group[0].element?.metal))
+  ) {
+    const [h, metal] = c.group[0].element.metal
+      ? [c.group[1], c.group[0]]
+      : [c.group[0], c.group[1]];
+
+    return determineOxidations(metal, {
+      includeUncommon,
+      target: typeof target == "number" ? target + 1 : target,
+    })
+      .map((m) => ({
+        oxidations: [
+          c.group[0] == h ? -1 : m.oxidations[0],
+          c.group[1] == h ? -1 : m.oxidations[0],
+        ],
+        charge: m.charge - 1,
+      }))
+      .filter((o) => target === void 0 || target == o.charge);
+  }
+  */
+
+  // General
+  return cartesianProduct(oxidationSelection(c, includeUncommon))
     .map((oxidations) => ({
       oxidations,
       charge: oxidations.reduce((a, b) => a + b, 0),
     }))
     .filter((o) => target === void 0 || target == o.charge);
+};
 
 export const oxidate = (c: Compound, target: number): Compound | null => {
   const oxidations = determineOxidations(c, { target });

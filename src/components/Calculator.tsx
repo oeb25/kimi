@@ -4,6 +4,7 @@ import * as mathjs from "mathjs";
 mathjs.createUnit("amu", "0.000000000000000000000001660539g");
 mathjs.createUnit("M", "1 mol/l");
 const Na = mathjs.evaluate("6.02214076e23 mol^-1");
+const R = mathjs.evaluate("0.0821 L atm/(K mol)");
 
 export const Calculator: React.FC<{ precision: number }> = ({ precision }) => {
   const [input, setInput] = React.useState("");
@@ -12,6 +13,7 @@ export const Calculator: React.FC<{ precision: number }> = ({ precision }) => {
   try {
     res = mathjs.evaluate(input, {
       Na,
+      R,
     });
   } catch (e) {}
 

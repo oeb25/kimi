@@ -1,25 +1,31 @@
 import * as React from "react";
-import { toBalanced, extractElements } from "./calc";
-import { parse, parseFormulaTerm } from "./parse";
+import { toBalanced, extractElements, tallyElements } from "./calc";
+import { Formula, latexFormula, parse, parseFormulaTerm } from "./parse";
 import { KimiElement } from "./data";
 import { PeriodicTable } from "./PeriodicTable";
 import { Oxidation } from "./components/Oxidation";
 import { CompoundInfo } from "./components/CompoundInfo";
 import { BalanceEquation } from "./components/Balance";
 import { Equilibrium2 } from "./components/Equilibrium";
+import { Katex } from "./components/Katex";
 
 export const KimiApp: React.FC<{}> = ({}) => {
   const [focus, setFocus] = React.useState<KimiElement[]>([]);
   const [showTable, setShowTable] = React.useState(false);
 
-  // const [input, setInput] = React.useState(
-  //   "H2O + MnO-4 + SO2-3 = MnO2 + SO2-4 + OH-"
-  // );
-  const [input, setInput] = React.useState("Cu + NO-3 = NO + Cu2+");
-  // const [input, setInput] = React.useState("TiCl4 + Mg = Ti + MgCl2");
-  // const [input, setInput] = React.useState("HCOOH = HCOO- + H+");
-  // const [input, setInput] = React.useState("C10H12N2O");
-  // const [input, setInput] = React.useState("C");
+  const [input, setInput] = React.useState(
+    // "Ba2+ + Cr2O2-7 + H2O = BaCrO4 + H+"
+    // "MnO-4 + O2-2 + H2O = MnO2 + O2 + OH-"
+    // "H2O + MnO-4 + SO2-3 = MnO2 + SO2-4 + OH-"
+    // "H2O + HgCl2 + NH3 = HgNH2Cl + Cl- + OH-"
+    "KNO3 + S + C = K2CO3 + K2SO4 + CO2 + N2" // Has multiple solutions
+    // "10KNO3 + 3S + 8C = 2K2CO3 + 3K2SO4 + 6CO2 + 5N2"
+    // "Cu + NO-3 = NO + Cu2+"
+    // "TiCl4 + Mg = Ti + MgCl2"
+    // "HCOOH = HCOO- + H+"
+    // "C10H12N2O"
+    // "C"
+  );
   const parsed = React.useMemo(() => {
     try {
       return parse(input);
@@ -93,6 +99,14 @@ export const KimiApp: React.FC<{}> = ({}) => {
     }
   }, [parsed, soulvent]);
 
+  const isAlreadyBalanced = React.useMemo(
+    () =>
+      inSolvent?.eq &&
+      JSON.stringify(summarize(inSolvent.eq.left)) ==
+        JSON.stringify(summarize(inSolvent.eq.right)),
+    [inSolvent?.eq]
+  );
+
   const [doBalance, setDoBalance] = React.useState(false);
   const balanced = React.useMemo(() => {
     if (!inSolvent || !inSolvent.eq) return null;
@@ -120,6 +134,8 @@ export const KimiApp: React.FC<{}> = ({}) => {
     [setInput, showTable]
   );
 
+  const eq = inSolvent?.eq && ((doBalance && balanced) || inSolvent.eq);
+
   return (
     <div className="grid grid-cols-1 gap-4 p-2 border border-gray-900 shadow place-items-center">
       <input
@@ -131,32 +147,37 @@ export const KimiApp: React.FC<{}> = ({}) => {
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
+      {eq && (
+        <div className="grid grid-cols-1 place-items-center">
+          <div className="grid grid-cols-2 gap-x-4">
+            <label className="select-none">
+              Acidic:{" "}
+              <input
+                type="checkbox"
+                checked={soulvent == "acidic"}
+                onChange={(e) =>
+                  e.target.checked ? setSoulvent("acidic") : setSoulvent(null)
+                }
+              />
+            </label>
+            <label className="select-none">
+              Basic:{" "}
+              <input
+                type="checkbox"
+                checked={soulvent == "basic"}
+                onChange={(e) =>
+                  e.target.checked ? setSoulvent("basic") : setSoulvent(null)
+                }
+              />
+            </label>
+          </div>
 
-      {inSolvent?.eq && (
-        <div className="grid grid-cols-2 gap-x-4 place-items-center">
-          <label className="select-none">
-            Acidic:{" "}
-            <input
-              type="checkbox"
-              checked={soulvent == "acidic"}
-              onChange={(e) =>
-                e.target.checked ? setSoulvent("acidic") : setSoulvent(null)
-              }
-            />
-          </label>
-          <label className="select-none">
-            Basic:{" "}
-            <input
-              type="checkbox"
-              checked={soulvent == "basic"}
-              onChange={(e) =>
-                e.target.checked ? setSoulvent("basic") : setSoulvent(null)
-              }
-            />
-          </label>
-
-          <div className="col-span-2">
-            {balanced ? (
+          <div>
+            {isAlreadyBalanced ? (
+              <label className="font-bold text-gray-400">
+                Equation balanced
+              </label>
+            ) : balanced ? (
               <label
                 className={
                   "select-none " +
@@ -177,18 +198,25 @@ export const KimiApp: React.FC<{}> = ({}) => {
               <label className="italic text-gray-400">Cannot balance</label>
             )}
           </div>
+          <div className="px-4">
+            <Katex
+              src={latexFormula(eq.left) + " \\;=\\; " + latexFormula(eq.right)}
+            />
+          </div>
         </div>
       )}
-      {inSolvent?.term && <CompoundInfo ft={inSolvent.term} />}
-      {inSolvent?.eq && (
-        <BalanceEquation eq={(doBalance && balanced) || inSolvent.eq} />
-      )}
-
-      {inSolvent?.eq && (
-        <Section title="Equilibrium">
-          <Equilibrium2 eq={(doBalance && balanced) || inSolvent.eq} />
+      {eq && (
+        <Section title="Mass Calculation">
+          <BalanceEquation eq={eq} />
         </Section>
       )}
+      {eq && (
+        <Section title="Equilibrium">
+          <Equilibrium2 eq={eq} />
+        </Section>
+      )}
+
+      {inSolvent?.term && <CompoundInfo ft={inSolvent.term} />}
 
       {inSolvent?.term && (
         <Section title="Oxidation">
@@ -239,3 +267,18 @@ const Section: React.FC<{
     </details>
   );
 };
+
+const summarize = (f: Formula) =>
+  Object.entries(
+    tallyElements({
+      group: f.terms.map((t) => ({
+        ...t.compound,
+        multi: t.count * t.compound.multi,
+      })),
+      multi: 1,
+    })
+  )
+    .sort(([a], [b]) => (a < b ? 1 : -1))
+    .concat([
+      ["e", f.terms.reduce((acc, t) => acc + (t.charge || 0) * t.count, 0)],
+    ]);

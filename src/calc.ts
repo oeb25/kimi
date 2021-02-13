@@ -1,5 +1,5 @@
 import * as data from "./data";
-import { findIntegerSolution } from "./matrix";
+import { findIntegerSolutions } from "./matrix";
 import { Compound, Equation, FormulaTerm, setCount } from "./parse";
 import { keys, mapValues } from "./util";
 
@@ -71,17 +71,18 @@ const balance = ({
   }
 
   const rows = keys(numberElements).map((e) =>
-    leftT.map((l) => l[e] || 0).concat(rightT.map((l) => -l[e] || 0).concat(0))
+    leftT.map((l) => l[e] || 0).concat(rightT.map((l) => -l[e] || 0))
   );
   // Add oxidation row
   rows.push(
     left.terms
       .map((t) => t.charge || 0)
-      .concat(right.terms.map((t) => -(t.charge || 0)).concat(0))
+      .concat(right.terms.map((t) => -(t.charge || 0)))
   );
-  rows.push(rows[0].map(() => 0));
 
-  const solution = findIntegerSolution(rows);
+  const solutions = Array.from(findIntegerSolutions(rows));
+
+  const solution = solutions[0];
 
   return {
     left: left.terms.map((_, i) => solution[i]),
