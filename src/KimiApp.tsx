@@ -9,46 +9,15 @@ import { BalanceEquation } from "./components/Balance";
 import { Equilibrium2 } from "./components/Equilibrium";
 import { Katex } from "./components/Katex";
 
-export const KimiApp: React.FC<{}> = ({}) => {
-  const [focus, setFocus] = React.useState<KimiElement[]>([]);
-  const [showTable, setShowTable] = React.useState(false);
-
-  const [input, setInput] = React.useState(
-    // "Ba2+ + Cr2O2-7 + H2O = BaCrO4 + H+"
-    // "MnO-4 + O2-2 + H2O = MnO2 + O2 + OH-"
-    // "H2O + MnO-4 + SO2-3 = MnO2 + SO2-4 + OH-"
-    // "H2O + HgCl2 + NH3 = HgNH2Cl + Cl- + OH-"
-    "KNO3 + S + C = K2CO3 + K2SO4 + CO2 + N2" // Has multiple solutions
-    // "10KNO3 + 3S + 8C = 2K2CO3 + 3K2SO4 + 6CO2 + 5N2"
-    // "Cu + NO-3 = NO + Cu2+"
-    // "TiCl4 + Mg = Ti + MgCl2"
-    // "HCOOH = HCOO- + H+"
-    // "C10H12N2O"
-    // "C"
-  );
+const useFormularInput = ({ source }: { source: string }) => {
   const parsed = React.useMemo(() => {
     try {
-      return parse(input);
+      return parse(source);
     } catch (e) {
       console.error(e);
       return null;
     }
-  }, [input]);
-
-  React.useEffect(() => {
-    if (!parsed) return setFocus([]);
-
-    const compounds =
-      parsed.term?.compound ||
-      parsed.formula?.terms ||
-      parsed.eq?.left.terms.concat(parsed.eq.right.terms);
-
-    if (!compounds) return setFocus([]);
-
-    const xs = extractElements(compounds);
-
-    setFocus(Array.from(xs));
-  }, [setFocus, parsed]);
+  }, [source]);
 
   const [soulvent, setSoulvent] = React.useState<null | "acidic" | "basic">(
     null
@@ -99,14 +68,6 @@ export const KimiApp: React.FC<{}> = ({}) => {
     }
   }, [parsed, soulvent]);
 
-  const isAlreadyBalanced = React.useMemo(
-    () =>
-      inSolvent?.eq &&
-      JSON.stringify(summarize(inSolvent.eq.left)) ==
-        JSON.stringify(summarize(inSolvent.eq.right)),
-    [inSolvent?.eq]
-  );
-
   const [doBalance, setDoBalance] = React.useState(false);
   const balanced = React.useMemo(() => {
     if (!inSolvent || !inSolvent.eq) return null;
@@ -119,22 +80,83 @@ export const KimiApp: React.FC<{}> = ({}) => {
     }
   }, [inSolvent]);
 
+  const eq = inSolvent?.eq && ((doBalance && balanced) || inSolvent.eq);
+
+  const isBalanced = React.useMemo(
+    () =>
+      eq &&
+      JSON.stringify(summarize(eq.left)) == JSON.stringify(summarize(eq.right)),
+    [eq]
+  );
+
+  return {
+    canBalance: balanced || isBalanced,
+    doBalance,
+    input: eq ? { eq } : parsed,
+    isBalanced,
+    setDoBalance,
+    setSoulvent,
+    soulvent,
+  };
+};
+
+export const KimiApp: React.FC<{}> = ({}) => {
+  const [focus, setFocus] = React.useState<KimiElement[]>([]);
+  const [showTable, setShowTable] = React.useState(false);
+
+  const [source, setSource] = React.useState(
+    // "Ba2+ + Cr2O2-7 + H2O = BaCrO4 + H+"
+    "C6H12O6 + O2 = CO2 + H2O"
+    // "MnO-4 + O2-2 + H2O = MnO2 + O2 + OH-"
+    // "H2O + MnO-4 + SO2-3 = MnO2 + SO2-4 + OH-"
+    // "H2O + HgCl2 + NH3 = HgNH2Cl + Cl- + OH-"
+    // "KNO3 + S + C = K2CO3 + K2SO4 + CO2 + N2" // Has multiple solutions
+    // "10KNO3 + 3S + 8C = 2K2CO3 + 3K2SO4 + 6CO2 + 5N2"
+    // "Cu + NO-3 = NO + Cu2+"
+    // "TiCl4 + Mg = Ti + MgCl2"
+    // "HCOOH = HCOO- + H+"
+    // "C10H12N2O"
+    // "C"
+  );
+  const {
+    canBalance,
+    doBalance,
+    input,
+    isBalanced,
+    setDoBalance,
+    setSoulvent,
+    soulvent,
+  } = useFormularInput({ source });
+
   React.useEffect(() => {
-    if (!inSolvent || inSolvent?.term?.compound.element) {
+    if (!input) return setFocus([]);
+
+    const compounds =
+      input.term?.compound ||
+      input.formula?.terms ||
+      input.eq?.left.terms.concat(input.eq.right.terms);
+
+    if (!compounds) return setFocus([]);
+
+    const xs = extractElements(compounds);
+
+    setFocus(Array.from(xs));
+  }, [JSON.stringify(input), setFocus]);
+
+  React.useEffect(() => {
+    if (!input || input?.term?.compound.element) {
       setShowTable(true);
     } else {
       setShowTable(false);
     }
-  }, [inSolvent, setShowTable]);
+  }, [JSON.stringify(input), setShowTable]);
 
   const onClickElement = React.useCallback(
     (e: KimiElement) => {
-      if (showTable) setInput(e.symbol);
+      if (showTable) setSource(e.symbol);
     },
-    [setInput, showTable]
+    [setSource, showTable]
   );
-
-  const eq = inSolvent?.eq && ((doBalance && balanced) || inSolvent.eq);
 
   return (
     <div className="grid grid-cols-1 gap-4 p-2 border border-gray-900 shadow place-items-center">
@@ -144,83 +166,85 @@ export const KimiApp: React.FC<{}> = ({}) => {
           fontFamily:
             '"Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
         }}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
+        value={source}
+        onChange={(e) => setSource(e.target.value)}
       />
-      {eq && (
-        <div className="grid grid-cols-1 place-items-center">
-          <div className="grid grid-cols-2 gap-x-4">
-            <label className="select-none">
-              Acidic:{" "}
-              <input
-                type="checkbox"
-                checked={soulvent == "acidic"}
-                onChange={(e) =>
-                  e.target.checked ? setSoulvent("acidic") : setSoulvent(null)
-                }
-              />
-            </label>
-            <label className="select-none">
-              Basic:{" "}
-              <input
-                type="checkbox"
-                checked={soulvent == "basic"}
-                onChange={(e) =>
-                  e.target.checked ? setSoulvent("basic") : setSoulvent(null)
-                }
-              />
-            </label>
-          </div>
-
-          <div>
-            {isAlreadyBalanced ? (
-              <label className="font-bold text-gray-400">
-                Equation balanced
-              </label>
-            ) : balanced ? (
-              <label
-                className={
-                  "select-none " +
-                  (balanced
-                    ? "cursor-pointer"
-                    : "line-through cursor-not-allowed")
-                }
-              >
-                Balance:{" "}
+      {input?.eq && (
+        <>
+          <div className="grid grid-cols-1 place-items-center">
+            <div className="grid grid-cols-2 gap-x-4">
+              <label className="select-none">
+                Acidic:{" "}
                 <input
-                  disabled={!balanced}
                   type="checkbox"
-                  checked={doBalance && !!balanced}
-                  onChange={(e) => setDoBalance(e.target.checked)}
+                  checked={soulvent == "acidic"}
+                  onChange={(e) =>
+                    e.target.checked ? setSoulvent("acidic") : setSoulvent(null)
+                  }
                 />
               </label>
-            ) : (
-              <label className="italic text-gray-400">Cannot balance</label>
-            )}
+              <label className="select-none">
+                Basic:{" "}
+                <input
+                  type="checkbox"
+                  checked={soulvent == "basic"}
+                  onChange={(e) =>
+                    e.target.checked ? setSoulvent("basic") : setSoulvent(null)
+                  }
+                />
+              </label>
+            </div>
+
+            <div>
+              {canBalance ? (
+                <label
+                  className={
+                    "select-none " +
+                    (canBalance
+                      ? "cursor-pointer"
+                      : "line-through cursor-not-allowed")
+                  }
+                >
+                  Balance:{" "}
+                  <input
+                    disabled={!canBalance}
+                    type="checkbox"
+                    checked={doBalance && !!canBalance}
+                    onChange={(e) => setDoBalance(e.target.checked)}
+                  />
+                </label>
+              ) : isBalanced ? (
+                <label className="font-bold text-gray-400">
+                  Equation balanced
+                </label>
+              ) : (
+                <label className="italic text-gray-400">Cannot balance</label>
+              )}
+            </div>
+            <div className="px-4">
+              <Katex
+                src={
+                  latexFormula(input.eq.left) +
+                  " \\;=\\; " +
+                  latexFormula(input.eq.right)
+                }
+              />
+            </div>
           </div>
-          <div className="px-4">
-            <Katex
-              src={latexFormula(eq.left) + " \\;=\\; " + latexFormula(eq.right)}
-            />
-          </div>
-        </div>
-      )}
-      {eq && (
-        <Section title="Mass Calculation">
-          <BalanceEquation eq={eq} />
-        </Section>
-      )}
-      {eq && (
-        <Section title="Equilibrium">
-          <Equilibrium2 eq={eq} />
-        </Section>
+          <Section title="Mass Calculation">
+            <BalanceEquation eq={input.eq} />
+          </Section>
+          <Section title="Equilibrium">
+            <Equilibrium2 eq={input.eq} />
+          </Section>
+        </>
       )}
 
-      {inSolvent?.term && <CompoundInfo ft={inSolvent.term} />}
+      {input?.term && <CompoundInfo ft={input.term} />}
 
-      {inSolvent?.term && (
+      {input?.term && (
         <Section title="Oxidation">
-          <Oxidation c={inSolvent.term.compound} />
+          <Oxidation c={input.term.compound} />
         </Section>
       )}
 

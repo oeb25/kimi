@@ -6,7 +6,11 @@ import { intersperse } from "../util";
 import { Katex } from "./Katex";
 import { equibThing } from "../calc";
 
-const newtonApproximate = (s: string, tolerance = 0.00000001) => {
+const newtonApproximate = (
+  s: string,
+  degree: number,
+  tolerance = 0.00000001
+) => {
   try {
     const fParsed = mathjs.parse(s);
     const dfParsed = mathjs.derivative(s, "x");
@@ -17,18 +21,6 @@ const newtonApproximate = (s: string, tolerance = 0.00000001) => {
     const maxCount = 1000;
 
     // C6H12O6 + 6O2 = 6CO2 + 6H2O
-
-    let deriv = fParsed;
-    let degree = 0;
-    while (!deriv.equals(mathjs.parse("0"))) {
-      deriv = mathjs.derivative(deriv, "x");
-      degree += 1;
-      console.log(mathjs.format(deriv));
-      if (degree > 10) {
-        console.error(s);
-        throw "fuck degree explodes";
-      }
-    }
 
     const results: number[] = [];
     for (let i = 0; i < degree * 5 && results.length < degree; i++) {
@@ -72,7 +64,7 @@ export const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
   const [initial, setInitial] = React.useState(
     eq.left.terms
       .concat(eq.right.terms)
-      .map((x, i) => (i < 2 ? (0.75 as number) : 0))
+      .map((_x, i) => (i < 2 ? (0.75 as number) : 0))
   );
   const [equibConst, setEquibConst] = React.useState(56.3);
 
@@ -89,23 +81,29 @@ export const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
     })
     .join(" * ");
 
+  const degree =
+    Math.max(
+      eq.left.terms.reduce((acc, t) => acc + t.count, 0),
+      eq.right.terms.reduce((acc, t) => acc + t.count, 0)
+    ) + 1;
+
   const equationForX = `${equibConst} * (${denom}) - (${num})`;
 
-  // const x = newtonApproximate(`${frac} - ${equibConst}`);
-  const x = newtonApproximate(equationForX).filter((x) => x >= 0);
+  const x = React.useMemo(
+    () => newtonApproximate(equationForX, degree).filter((x) => x >= 0),
+    [equationForX, degree]
+  );
 
   const foundItLeft = eq.left.terms.findIndex(
     (c) =>
       c.charge == 1 &&
-      c.compound?.group?.length === 1 &&
       // c.compound[0].charge == 1 &&
-      c.compound.group[0].element?.symbol == "H"
+      c.compound.element?.symbol == "H"
   );
   const foundItRight = eq.right.terms.findIndex(
     (c) =>
-      c.compound?.group?.length === 1 &&
       // c.compound[0].charge == 1 &&
-      c.compound.group[0].element?.symbol == "H"
+      c.compound.element?.symbol == "H"
   );
   console.log(foundItLeft, eq.left, foundItRight, eq.right);
 

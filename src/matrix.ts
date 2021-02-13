@@ -78,7 +78,6 @@ const nullSpace = (matrix: number[][]) => {
     rref
       .map((row) => -row[col])
       .concat(range(rank, numCols).map((j) => (col == j ? 1 : 0)))
-      .map((x) => mathjs.round(x, 10))
   );
 
   if (span.length == 0) {
@@ -113,16 +112,20 @@ export const findIntegerSolutions = (matrix: number[][]) => {
       if (seenIds.has(id)) continue;
 
       const coefficients = range(0, dims).map((col) =>
-        factors.reduce((acc, f, row) => acc + f * span[row][col], 0)
+        mathjs.round(
+          factors.reduce((acc, f, row) => acc + f * span[row][col], 0),
+          10
+        )
       );
+
       // If any coefficient is negative or non-integer, throw away the solution
       if (any(coefficients, (x) => x <= 0 || !Number.isInteger(x))) continue;
       seenIds.add(id);
-      yield coefficients.map((x) => x | 0);
+      yield coefficients.map((x) => Math.round(x));
     }
 
     if (seenIds.size == 0) {
-      console.log(span);
+      console.log(matrix, span);
       throw "No solutions found";
     }
   })();
