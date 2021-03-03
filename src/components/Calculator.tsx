@@ -26,6 +26,7 @@ idealGas.rawArgs = true;
 try {
   math.createUnit("amu", "0.000000000000000000000001660539g");
   math.createUnit("M", "1 mol/l");
+  math.createUnit("AA", "1e-10 m");
   math.import({ idealGas, ig: idealGas }, {});
 } catch (e) {
   console.error(e);
