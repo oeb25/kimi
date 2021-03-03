@@ -30,16 +30,19 @@ try {
 } catch (e) {
   console.error(e);
 }
-const Na = math.evaluate("6.02214076e23 mol^-1");
-const R = math.evaluate("0.0821 L atm/(K mol)");
-
+const constants = {
+  Na: math.evaluate("avogadro"),
+  R: math.evaluate("gasConstant"),
+  c: math.evaluate("speedOfLight"),
+  h: math.evaluate("planckConstant"),
+  E: math.evaluate("null"),
+};
 export const Calculator: React.FC<{ precision: number }> = ({ precision }) => {
   const [input, setInput] = React.useState("");
 
   const [evalulated, scope] = React.useMemo(() => {
     const scope = {
-      Na,
-      R,
+      ...constants,
     };
 
     return [
