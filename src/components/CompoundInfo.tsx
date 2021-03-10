@@ -114,6 +114,9 @@ export const CompoundInfo: React.FC<{ ft: FormulaTerm }> = ({ ft }) => {
                 <p>Missing</p>
               )}
             </DataRow>
+            <DataRow title="Valence electrons:">
+              <Katex src={`\\text{${cData.numberOfValence}}`} />
+            </DataRow>
           </>
         ) : null}
       </div>
@@ -169,6 +172,8 @@ const DataRow: React.FC<{ title: React.ReactChild; className?: string }> = ({
     </>
   );
 };
+
+// TODO: Adhere to charge
 
 const ElectronConfigList: React.FC<{ base: KimiElement }> = ({ base }) => {
   const [expand, setExpand] = React.useState(false);
