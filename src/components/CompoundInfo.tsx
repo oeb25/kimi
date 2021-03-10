@@ -114,7 +114,7 @@ export const CompoundInfo: React.FC<{ ft: FormulaTerm }> = ({ ft }) => {
                 <p>Missing</p>
               )}
             </DataRow>
-            <DataRow title="Valence electrons:">
+            <DataRow title="Valence Electrons:">
               <Katex src={`\\text{${cData.numberOfValence}}`} />
             </DataRow>
           </>
