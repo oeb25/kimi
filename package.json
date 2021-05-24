@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "start": "parcel src/index.html",
+    "start": "env TAILWIND_MODE='watch' vite",
     "build": "NODE_ENV=production parcel build src/index.html"
   },
   "keywords": [],
@@ -14,15 +14,18 @@
     "@types/mathjs": "^6.0.11",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
+    "@vitejs/plugin-react-refresh": "^1.3.3",
     "autoprefixer": "^10.2.3",
-    "parcel": "^2.0.0-nightly.554",
-    "postcss": "^8.2.4",
-    "tailwindcss": "^2.0.2",
-    "typescript": "^4.1.3"
+    "postcss": "^8.2.10",
+    "tailwindcss": "^2.1.2",
+    "typescript": "^4.1.3",
+    "vite": "^2.3.3",
+    "vite-plugin-imagemin": "^0.3.2"
   },
   "dependencies": {
     "katex": "^0.12.0",
     "mathjs": "^9.1.0",
+    "nerdamer": "^1.1.10",
     "react": "^17.0.1",
     "react-dom": "^17.0.1"
   },

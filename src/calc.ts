@@ -107,8 +107,10 @@ export const toBalanced = (eq: Equation): Equation => {
 export const equibThing = (a: number, b: number, u: number, v: number) => {
   const res = solveQuadratic(1, u + v + b, u * v - a * b);
   if (!res) return null;
+  console.log(res);
+
   const x = Math.max(...res);
-  return { x, pH: 14 + Math.log10(x) };
+  return { x, pH: -Math.log10(x) };
 };
 
 const solveQuadratic = (a: number, b: number, c: number) => {

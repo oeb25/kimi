@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as mathjs from "mathjs";
 import { Katex } from "./Katex";
+import { keys } from "../util";
 
 const math = mathjs.create(mathjs.all) as typeof mathjs;
 
@@ -42,7 +43,7 @@ export const Calculator: React.FC<{ precision: number }> = ({ precision }) => {
   const [input, setInput] = React.useState("");
 
   const [evalulated, scope] = React.useMemo(() => {
-    const scope = {
+    const scope: Record<string, number> = {
       ...constants,
     };
 
@@ -51,6 +52,44 @@ export const Calculator: React.FC<{ precision: number }> = ({ precision }) => {
         let res = null;
         try {
           res = math.evaluate(line, scope);
+          const l = line.replace(/ /g, "");
+          if (l.startsWith("pH=")) {
+            math.evaluate(
+              `
+              pOH = 14 - pH
+              OH = 10^(-pH)
+              H3O = 10^(-pOH)
+              `,
+              scope
+            );
+          } else if (l.startsWith("pOH=")) {
+            math.evaluate(
+              `
+              pH = 14 - pOH
+              OH = 10^(-pH)
+              H3O = 10^(-pOH)
+              `,
+              scope
+            );
+          } else if (l.startsWith("OH=")) {
+            math.evaluate(
+              `
+              pOH = -log10(OH)
+              pH = 14 - pOH
+              H3O = 10^(-pOH)
+              `,
+              scope
+            );
+          } else if (l.startsWith("H3O=")) {
+            math.evaluate(
+              `
+              pH = -log10(H3O)
+              pOH = 14 - pH
+              H3O = 10^(-pOH)
+              `,
+              scope
+            );
+          }
         } catch (e) {
           console.error(e);
         }

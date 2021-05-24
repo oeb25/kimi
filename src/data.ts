@@ -1,8 +1,5 @@
-/* @ts-ignore */
 import source1Raw from "./sources/source1.json";
-/* @ts-ignore */
 import source2Raw from "./sources/source2.json";
-/* @ts-ignore */
 import oxidationStatesRaw from "./sources/oxidationStates.json";
 
 const source1 = source1Raw as readonly ElementSource1[];
@@ -230,8 +227,7 @@ export interface OxidationState {
 
 const table = {
   "16.4": {
-    name:
-      "Ionization Constants of Some Diprotic Acids and a Polyprotic Acid and their Conjugate Bases at 258C",
+    name: "Ionization Constants of Some Diprotic Acids and a Polyprotic Acid and their Conjugate Bases at 258C",
     entries: [
       {
         "Name of acid": "Sulfuric acid",

@@ -19,9 +19,16 @@
     { "common": true, "ions": 3 }
   ],
   [
+    // { "common": true, "ions": -4 },
     { "common": false, "ions": -4 },
+    // { "common": true, "ions": -3 },
+    // { "common": true, "ions": -2 },
+    // { "common": true, "ions": -1 },
     { "common": true, "ions": 0 },
+    // { "common": true, "ions": 1 },
+    // { "common": true, "ions": 2 },
     { "common": false, "ions": 2 },
+    // { "common": true, "ions": 3 },
     { "common": true, "ions": 4 }
   ],
   [

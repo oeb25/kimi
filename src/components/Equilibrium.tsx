@@ -1,10 +1,13 @@
 import * as React from "react";
 import * as mathjs from "mathjs";
 import { Equation, FormulaTerm, latexFormulaTerm } from "../parse";
-import { UnitInput } from "./UnitInput";
+import { Precision, UnitInput } from "./UnitInput";
 import { intersperse } from "../util";
 import { Katex } from "./Katex";
 import { equibThing } from "../calc";
+
+import * as nerdamer from "nerdamer";
+import "nerdamer/Solve";
 
 const newtonApproximate = (
   s: string,
@@ -59,6 +62,8 @@ const newtonApproximate = (
 };
 
 export const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
+  return <Equilibrium />;
+
   const numCols = eq.left.terms.length + eq.right.terms.length;
 
   const [initial, setInitial] = React.useState(
@@ -224,21 +229,76 @@ export const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
           <Katex src="x =" />
           <UnitInput placeholder="Solution for x" value={x as any} unit="M" />
         </div>
-        {/* <Katex src={mathjs.parse(frac).toTex()} /> */}
+        <Katex
+          src={mathjs.parse(`(${equibConst}) = (${num}) / (${denom})`).toTex()}
+        />
       </div>
     </div>
   );
 };
 
+const equib = (k: number, lhs: [number, number][], rhs: [number, number][]) => {
+  try {
+    const fmt = (xs: [number, number][]) =>
+      mathjs
+        .simplify(xs.map(([a, e]) => `(${a} - x)^${e}`).join(" * "))
+        .toString();
+
+    const eq = `${k} * ${fmt(lhs)} = ${fmt(rhs)}`;
+
+    let tex = `${mathjs
+      .simplify(`(${fmt(lhs).toString()}) / (${fmt(rhs).toString()})`)
+      .toTex()}`;
+
+    if (tex.startsWith("\\frac")) {
+      tex = "\\d" + tex.slice(1);
+    }
+
+    let s: string;
+
+    try {
+      // @ts-ignore
+      s = nerdamer.solveEquations(eq).toString();
+    } catch (e) {
+      console.error(e);
+      return { tex };
+    }
+
+    const solved: number[] = s
+      .split(",")
+      .map((x) => mathjs.parse(x).evaluate());
+
+    if (solved.length == 0) return { tex };
+
+    const x = Math.max(...solved);
+    return { tex, res: { x, pH: -Math.log10(x) } };
+  } catch (e) {
+    return { tex: "\\text{Parse error}" };
+  }
+};
+
 const Equilibrium: React.FC<{}> = ({}) => {
+  const precision = React.useContext(Precision);
+
+  const [coef, setCoef] = React.useState([1, 1, 1]);
+
   const [a, setA] = React.useState(0.25);
-  const [b, setB] = React.useState(1.4e-11);
+  const [k, setK] = React.useState(1.4e-11);
   const [u, setU] = React.useState(0);
   const [v, setV] = React.useState(0);
 
-  const res = equibThing(a, b, u, v);
+  // const res = equibThing(a, k, u, v);
+  const lc = coef.map((c) => Math.min(c, 10));
+  const { tex, res } = equib(
+    k,
+    [[a, lc[0]]],
+    [
+      [u, lc[1]],
+      [v, lc[2]],
+    ]
+  );
 
-  console.log({ a, b, u, v }, res);
+  // console.log({ a, k, u, v }, res);
 
   return (
     <div>
@@ -246,6 +306,25 @@ const Equilibrium: React.FC<{}> = ({}) => {
         className="grid border-b"
         style={{ gridTemplateColumns: "auto repeat(3, auto)" }}
       >
+        <span>Coeif</span>
+        <UnitInput
+          value={coef[0]}
+          placeholder="a"
+          onChange={(x) => setCoef((k) => [x, k[1], k[2]])}
+          unit=""
+        />
+        <UnitInput
+          value={coef[1]}
+          placeholder="u"
+          onChange={(x) => setCoef((k) => [k[0], x, k[2]])}
+          unit=""
+        />
+        <UnitInput
+          value={coef[2]}
+          placeholder="v"
+          onChange={(x) => setCoef((k) => [k[0], k[1], x])}
+          unit=""
+        />
         <span>Initial</span>
         <UnitInput value={a} placeholder="a" onChange={setA} unit="M" />
         <UnitInput value={u} placeholder="u" onChange={setU} unit="M" />
@@ -283,17 +362,39 @@ const Equilibrium: React.FC<{}> = ({}) => {
           unit="M"
         />
       </div>
-      <UnitInput value={b} placeholder="b" onChange={setB} unit="Ka/Kb" />
-      <UnitInput
-        value={res ? res.pH : NaN}
-        placeholder="res ? res.pH : NaN"
-        unit="pH"
-      />
-      <UnitInput
-        value={res ? (res.x / a) * 100 : NaN}
-        placeholder="res ? res.x : NaN"
-        unit="%"
-      />
+      <div className="flex">
+        <div className="w-52">
+          <UnitInput value={k} placeholder="b" onChange={setK} unit="Ka/Kb" />
+          <UnitInput
+            value={res ? res.pH : NaN}
+            placeholder="res ? res.pH : NaN"
+            unit="pH/pOH"
+          />
+          <UnitInput
+            value={res ? (res.x / a) * 100 : NaN}
+            placeholder="res ? res.x : NaN"
+            unit="%"
+          />
+        </div>
+
+        <div className="grid flex-1 col-start-2 row-span-full place-items-center">
+          {/* `(${k}) = ((x - ${u})*(x - ${v}) / (${a} - x))` */}
+          <Katex
+            src={`${mathjs
+              .simplify((k as any as string) || "0")
+              .toTex({ precision })} = ${tex}`}
+          />
+          {/* <Katex
+            src={`${mathjs
+              .simplify((k as any as string) || "0")
+              .toTex({ precision })} = \\cfrac{${mathjs
+              .simplify(`(x - ${u})*(x - ${v})`)
+              .toTex({ precision })}}{${mathjs
+              .simplify(`(${a} - x)`)
+              .toTex({ precision })}}`}
+          /> */}
+        </div>
+      </div>
     </div>
   );
 };

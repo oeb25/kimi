@@ -3,6 +3,8 @@ import * as ReactDOM from "react-dom";
 import { Precision } from "./components/UnitInput";
 import { KimiApp } from "./KimiApp";
 import { Calculator } from "./components/Calculator";
+// import { PHConverter } from "./PHConverter";
+import "./style.css";
 
 const App: React.FC<{}> = ({}) => {
   const [precision, setPrecision] = React.useState(3);
@@ -26,6 +28,7 @@ const App: React.FC<{}> = ({}) => {
             onChange={(e) => setPrecision(parseInt(e.target.value))}
           />
         </div>
+        {/* <PHConverter /> */}
         <Calculator precision={precision} />
       </div>
     </div>
