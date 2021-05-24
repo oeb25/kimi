@@ -104,7 +104,7 @@ export const Calculator: React.FC<{ precision: number }> = ({ precision }) => {
     <div className="grid grid-flow-col gap-2 border-gray-900 shadow place-self-center place-items-center">
       <div className="relative font-mono">
         <div
-          className="z-0 p-2 pointer-events-none opacity-20"
+          className="z-0 p-2 break-words whitespace-pre-wrap pointer-events-none opacity-20"
           style={{ minWidth: "10em" }}
         >
           {evalulated.map(([line, res], i) => (
