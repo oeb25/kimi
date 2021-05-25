@@ -2,6 +2,8 @@ import * as React from "react";
 import * as mathjs from "mathjs";
 import { Katex } from "./Katex";
 import { keys } from "../util";
+import { parseCompound, parseFormulaTerm } from "../parse";
+import { calculateAtomicMass } from "../calc";
 
 const math = mathjs.create(mathjs.all) as typeof mathjs;
 
@@ -10,25 +12,36 @@ const idealGas = (
   math: typeof mathjs,
   scope: Record<string, any>
 ) => {
-  if (!("V" in scope)) {
-    return math.evaluate("n R T / p", scope);
-  } else if (!("p" in scope)) {
-    return math.evaluate("n R T / V", scope);
-  } else if (!("n" in scope)) {
-    return math.evaluate("p V / (R T)", scope);
-  } else if (!("T" in scope)) {
-    return math.evaluate("p V / (R n)", scope);
-  } else {
-    return NaN;
+  const target = _args[0].toString();
+
+  switch (target) {
+    case "V":
+      return math.evaluate("n R T / p", scope);
+    case "p":
+      return math.evaluate("n R T / V", scope);
+    case "n":
+      return math.evaluate("p V / (R T)", scope);
+    case "T":
+      return math.evaluate("p V / (R n)", scope);
+    default:
+      return NaN;
   }
 };
 idealGas.rawArgs = true;
+
+const massOf = (args: mathjs.MathNode[]) => {
+  const parsed = parseFormulaTerm(args[0].toString());
+  return mathjs.evaluate(
+    parsed.count * calculateAtomicMass([parsed.compound]) + "g/mol"
+  );
+};
+massOf.rawArgs = true;
 
 try {
   math.createUnit("amu", "0.000000000000000000000001660539g");
   math.createUnit("M", "1 mol/l");
   math.createUnit("AA", "1e-10 m");
-  math.import({ idealGas, ig: idealGas }, {});
+  math.import({ idealGas, ig: idealGas, massOf }, {});
 } catch (e) {
   console.error(e);
 }
@@ -43,9 +56,11 @@ export const Calculator: React.FC<{ precision: number }> = ({ precision }) => {
   const [input, setInput] = React.useState("");
 
   const [evalulated, scope] = React.useMemo(() => {
-    const scope: Record<string, number> = {
+    const scope: object = {
       ...constants,
     };
+
+    const frompH = "pOH = 14 - pH; OH = 10^(-pOH); H3O = 10^(-pH)";
 
     return [
       input.split("\n").map((line) => {
@@ -54,20 +69,12 @@ export const Calculator: React.FC<{ precision: number }> = ({ precision }) => {
           res = math.evaluate(line, scope);
           const l = line.replace(/ /g, "");
           if (l.startsWith("pH=")) {
-            math.evaluate(
-              `
-              pOH = 14 - pH
-              OH = 10^(-pH)
-              H3O = 10^(-pOH)
-              `,
-              scope
-            );
+            math.evaluate(frompH, scope);
           } else if (l.startsWith("pOH=")) {
             math.evaluate(
               `
               pH = 14 - pOH
-              OH = 10^(-pH)
-              H3O = 10^(-pOH)
+              ${frompH}
               `,
               scope
             );
@@ -76,7 +83,7 @@ export const Calculator: React.FC<{ precision: number }> = ({ precision }) => {
               `
               pOH = -log10(OH)
               pH = 14 - pOH
-              H3O = 10^(-pOH)
+              ${frompH}
               `,
               scope
             );
@@ -84,8 +91,7 @@ export const Calculator: React.FC<{ precision: number }> = ({ precision }) => {
             math.evaluate(
               `
               pH = -log10(H3O)
-              pOH = 14 - pH
-              H3O = 10^(-pOH)
+              ${frompH}
               `,
               scope
             );

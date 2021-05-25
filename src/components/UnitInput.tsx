@@ -115,4 +115,11 @@ export const UnitInput: React.FC<
 
 const prettyNumber = (x: number, precision: number) =>
   mathjs.format(x, { precision });
-const evaluate = (x: string) => mathjs.evaluate(x) as number;
+const evaluate = (x: string) => {
+  try {
+    return mathjs.evaluate(x) as number;
+  } catch (e) {
+    console.error(e);
+    return NaN;
+  }
+};

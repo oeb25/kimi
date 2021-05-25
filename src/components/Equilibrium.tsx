@@ -244,29 +244,31 @@ const equib = (k: number, lhs: [number, number][], rhs: [number, number][]) => {
         .simplify(xs.map(([a, e]) => `(${a} - x)^${e}`).join(" * "))
         .toString();
 
-    const eq = `${k} * ${fmt(lhs)} = ${fmt(rhs)}`;
+    const eq = `${k} = (${fmt(rhs)}) / (${fmt(lhs)})`;
 
     let tex = `${mathjs
-      .simplify(`(${fmt(lhs).toString()}) / (${fmt(rhs).toString()})`)
+      .simplify(`(${fmt(rhs).toString()}) / (${fmt(lhs).toString()})`)
       .toTex()}`;
 
     if (tex.startsWith("\\frac")) {
       tex = "\\d" + tex.slice(1);
     }
 
-    let s: string;
+    let s: string[];
 
     try {
       // @ts-ignore
-      s = nerdamer.solveEquations(eq).toString();
+      s = [].concat(nerdamer.solveEquations(eq)).map((x) => x.toString());
     } catch (e) {
       console.error(e);
       return { tex };
     }
 
     const solved: number[] = s
-      .split(",")
-      .map((x) => mathjs.parse(x).evaluate());
+      .map((x) => mathjs.parse(x).evaluate())
+      .filter((c) => mathjs.isNumeric(c));
+
+    console.log(solved);
 
     if (solved.length == 0) return { tex };
 
@@ -286,6 +288,9 @@ const Equilibrium: React.FC<{}> = ({}) => {
   const [k, setK] = React.useState(1.4e-11);
   const [u, setU] = React.useState(0);
   const [v, setV] = React.useState(0);
+
+  const pK = -Math.log10(k);
+  const setpK = (pK: number) => setK(Math.pow(10, -pK));
 
   // const res = equibThing(a, k, u, v);
   const lc = coef.map((c) => Math.min(c, 10));
@@ -365,6 +370,12 @@ const Equilibrium: React.FC<{}> = ({}) => {
       <div className="flex">
         <div className="w-52">
           <UnitInput value={k} placeholder="b" onChange={setK} unit="Ka/Kb" />
+          <UnitInput
+            value={pK}
+            placeholder="b"
+            onChange={setpK}
+            unit="pKa/pKb"
+          />
           <UnitInput
             value={res ? res.pH : NaN}
             placeholder="res ? res.pH : NaN"
