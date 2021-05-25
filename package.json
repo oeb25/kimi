@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "start": "env TAILWIND_MODE='watch' vite",
-    "build": "NODE_ENV=production parcel build src/index.html"
+    "build": "env NODE_ENV=production vite build"
   },
   "keywords": [],
   "author": "",
