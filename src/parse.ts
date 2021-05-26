@@ -101,24 +101,8 @@ const parseCompoundInternal = (s: string): [Compound, undefined | number] => {
   s = s.trim();
   return recurse(s);
 };
-const fixCompound = (c: Compound): Compound => {
-  if (c.group?.length == 1 && c.group[0].group) {
-    return fixCompound({
-      multi: c.multi * c.group[0].multi,
-      group: c.group[0].group.map(fixCompound),
-      oxidation: c.oxidation || c.group[0].oxidation,
-    });
-  } else if (c.group) {
-    return {
-      ...c,
-      group: c.group.map(fixCompound),
-    };
-  } else {
-    return c;
-  }
-};
 export const parseCompound = (s: string): Compound =>
-  fixCompound(parseCompoundInternal(s)[0]);
+  parseCompoundInternal(s)[0];
 
 export const parseFormulaTerm = (s: string): FormulaTerm => {
   s = s.trim();
@@ -128,7 +112,7 @@ export const parseFormulaTerm = (s: string): FormulaTerm => {
   // TODO: Charge
   // const charge = 0;
   const [compound, charge] = parseCompoundInternal(combi);
-  return { compound: fixCompound(compound), count, charge };
+  return { compound, count, charge };
 };
 export const parseFormula = (s: string): Formula => ({
   terms: s.split(" + ").map(parseFormulaTerm),
