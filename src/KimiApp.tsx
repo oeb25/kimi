@@ -19,9 +19,8 @@ const useFormularInput = ({ source }: { source: string }) => {
     }
   }, [source]);
 
-  const [soulvent, setSoulvent] = React.useState<null | "acidic" | "basic">(
-    null
-  );
+  const [soulvent, setSoulvent] =
+    React.useState<null | "acidic" | "basic">(null);
 
   const inSolvent = React.useMemo<typeof parsed>(() => {
     if (!parsed || !parsed.eq) return parsed;
@@ -280,8 +279,9 @@ const Section: React.FC<{
       <summary
         className="w-full outline-none cursor-pointer"
         onClick={(e) => {
-          const didOpen = !((e.target as HTMLElement)
-            .parentElement as HTMLDetailsElement).open;
+          const didOpen = !(
+            (e.target as HTMLElement).parentElement as HTMLDetailsElement
+          ).open;
           setInternalOpen(didOpen);
         }}
       >
