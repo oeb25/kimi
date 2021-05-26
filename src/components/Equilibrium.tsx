@@ -241,18 +241,24 @@ const equib = (k: number, lhs: [number, number][], rhs: [number, number][]) => {
   try {
     const fmt = (xs: [number, number][]) =>
       mathjs
-        .simplify(xs.map(([a, e]) => `(${a} - x)^${e}`).join(" * "))
+        .simplify(xs.map(([a, e]) => `(${a} - ${e}*x)^${e}`).join(" * "))
         .toString();
 
     const eq = `${k} = (${fmt(rhs)}) / (${fmt(lhs)})`;
 
-    let tex = `${mathjs
-      .simplify(`(${fmt(rhs).toString()}) / (${fmt(lhs).toString()})`)
-      .toTex()}`;
-
-    if (tex.startsWith("\\frac")) {
-      tex = "\\d" + tex.slice(1);
-    }
+    const fmtTex = (xs: [number, number][]) =>
+      xs
+        .map(([a, e]) =>
+          e == 1 && a == 0
+            ? "-x"
+            : e == 1
+            ? `${a} - x`
+            : a == 0
+            ? `(${e}x)^{${e}}`
+            : `(${a} - ${e} x)^{${e}}`
+        )
+        .join(" \\cdot ");
+    let tex = `\\dfrac{${fmtTex(rhs).toString()}}{${fmtTex(lhs).toString()}}`;
 
     let s: string[];
 
@@ -352,17 +358,17 @@ const Equilibrium: React.FC<{}> = ({}) => {
         />
         <span>Equilibrium</span>
         <UnitInput
-          value={res ? a - res.x : NaN}
+          value={res ? (a - res.x) / lc[0] : NaN}
           placeholder="res ? -res.x : NaN"
           unit="M"
         />
         <UnitInput
-          value={res ? res.x : NaN}
+          value={res ? res.x * lc[1] : NaN}
           placeholder="res ? res.x : NaN"
           unit="M"
         />
         <UnitInput
-          value={res ? res.x : NaN}
+          value={res ? res.x * lc[2] : NaN}
           placeholder="res ? res.x : NaN"
           unit="M"
         />
