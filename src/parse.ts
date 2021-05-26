@@ -11,6 +11,7 @@ export type Formula = {
 };
 
 type Base = {
+  forcePren?: boolean;
   multi: number;
 };
 
@@ -169,7 +170,7 @@ export const latexCompound = (c: Compound): string => {
     return `\\stackrel{${oxi}}{\\text{${c.element.symbol}}${m}}`;
   } else {
     const self = c.group.map(latexCompound).join(" ");
-    return m ? `(${self})${m}` : `${self}${m}`;
+    return m || c.forcePren ? `(${self})${m}` : `${self}${m}`;
   }
 };
 
@@ -192,7 +193,7 @@ export const latexFormulaTerm = (ft: FormulaTerm): string => {
       latexCompound({
         multi: 1,
         group: c.group.map((x, i) =>
-          i == c.group!.length - 1 ? setMulti(x, 1) : x
+          i == c.group!.length - 1 ? { ...setMulti(x, 1), forcePren: true } : x
         ),
       }) +
       charge +
