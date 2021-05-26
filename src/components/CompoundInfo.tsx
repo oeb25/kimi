@@ -95,7 +95,7 @@ export const CompoundInfo: React.FC<{ ft: FormulaTerm }> = ({ ft }) => {
             <DataRow title="Group:">
               <Katex src={`\\text{${cData.group}}`} />
             </DataRow>
-            <ElectronConfigList base={cData} />
+            <ElectronConfigList charge={ft.charge || 0} base={cData} />
             <DataRow title="Oxidation States:">
               {cData.oxidationStates ? (
                 <Katex
@@ -175,45 +175,219 @@ const DataRow: React.FC<{ title: React.ReactChild; className?: string }> = ({
 
 // TODO: Adhere to charge
 
-const ElectronConfigList: React.FC<{ base: KimiElement }> = ({ base }) => {
-  const [expand, setExpand] = React.useState(false);
-  let i = 0;
-  const entries = [
-    <DataRow
-      key={i++}
-      title={
-        <>
-          <input
-            type="checkbox"
-            checked={expand}
-            onChange={(e) => setExpand(e.target.checked)}
-          />{" "}
-          Election Config:
-        </>
-      }
-      className="cursor-pointer select-none"
-    >
-      <Katex src={(base.electronicConfiguration || "").replace(/ /g, "\\;")} />
-    </DataRow>,
-  ];
-
-  if (expand) {
-    const re = /\[([a-z]*)\] (.*)/i;
-    let m = re.exec(base.electronicConfiguration);
-    while (m) {
-      const sym = m[1];
-      const next = data.elements[sym];
-      entries.push(
-        <DataRow key={i++} title={<Katex src={sym} />}>
-          <Katex
-            src={(next.electronicConfiguration || "").replace(/ /g, "\\;")}
-          />
-        </DataRow>
-      );
-
-      m = re.exec(next.electronicConfiguration);
+const parseEC = (ec: string) => {
+  return ec.split(" ").map((e) => {
+    if (e.startsWith("[")) {
+      return e.replace(/[\[\]]/g, "");
+    } else {
+      const [, a, b, c] = e.match(/(\d*)(.)(\d*)/)!;
+      return [a + b, parseInt(c)] as [string, number];
     }
+  });
+};
+
+const parsedEC = (base: KimiElement | null) => {
+  const ecs = [];
+  let prev: KimiElement | null = null;
+
+  while (base) {
+    const res = parseEC(base.electronicConfiguration);
+    const row = {
+      from: prev,
+      nested: null as KimiElement | null,
+      electrons: [] as [string, number][],
+    };
+
+    base = null;
+    if (typeof res[0] == "string") {
+      base = data.elements[res[0]];
+      row.nested = base;
+      res.splice(0, 1);
+    }
+    prev = base;
+
+    row.electrons = res as typeof row["electrons"];
+    ecs.push(row);
   }
 
-  return <React.Fragment key={"idk-" + i}>{entries}</React.Fragment>;
+  return ecs;
+};
+type ParsedEC = ReturnType<typeof parsedEC>;
+
+console.log(
+  Object.fromEntries(
+    parsedEC(data.elements["Og"])
+      .map((e) => e.electrons)
+      .reduce((a, b) => b.concat(a), [])
+      .map((e) => [e[0], e[1]])
+  )
+);
+
+// s
+// s
+// p
+// s
+// p
+// s
+// d
+// p
+// s
+// d
+// p
+// s
+// f
+// d
+// p
+// s
+// f
+// d
+// p
+// gfdgfhghi
+
+const orbitalAddOrder = [
+  ["1s", 2, "2s"], // s
+  ["2s", 2, "2p"], // s
+  ["2p", 6, "3s"], // p
+  ["3s", 2, "3p"], // s
+  ["3p", 6, "4s"], // p
+  ["4s", 2, "3d"], // s
+  ["3d", 10, "4p"], // d
+  ["4p", 6, "5s"], // p
+  ["5s", 2, "4d"], // s
+  ["4d", 10, "5p"], // d
+  ["5p", 6, "6s"], // p
+  ["6s", 2, "4f"], // s
+  ["4f", 14, "5d"], // f
+  ["5d", 10, "6p"], // d
+  ["6p", 6, "7s"], // p
+  ["7s", 2, "5f"], // s
+  ["5f", 14, "6d"], // f
+  ["6d", 10, "7p"], // d
+  ["7p", 6, ""], // p
+] as const;
+
+const lastE = (ec: ParsedEC) => ec[0].electrons[ec[0].electrons.length - 1];
+
+const adjustCharge = (ec: ParsedEC, charge: number) => {
+  if (charge == 0) return ec;
+
+  // Clone the EC
+  const ec2 = ec.map((e) => ({
+    from: e.from,
+    nested: e.nested,
+    electrons: e.electrons.map((x) => [x[0], x[1]] as [string, number]),
+  }));
+
+  // TODO: Implement for negative charge
+  if (charge < 0) {
+    // Sort elections in add order
+    ec2[0].electrons.sort((a, b) =>
+      a[0][0] == "["
+        ? Infinity
+        : b[0][0]
+        ? -Infinity
+        : orbitalAddOrder.findIndex((x) => x[0] == a[0])! -
+          orbitalAddOrder.findIndex((x) => x[0] == b[0])!
+    );
+
+    while (charge < 0) {
+      const l = lastE(ec2);
+      console.log("pre", ec2[0]);
+      const max = orbitalAddOrder.find((x) => x[0] == l[0])!;
+      if (l[1] == max[1]) {
+        ec2[0].electrons.push([max[2], 1]);
+      } else {
+        l[1] += 1;
+      }
+      console.log("post", ec2[0]);
+      charge += 1;
+    }
+
+    return ec2;
+  }
+
+  while (charge > 0 && ec2.length > 0) {
+    console.log(ec2);
+
+    if (
+      ec2[0].electrons.length == 0 ||
+      (ec2[0].electrons.length == 1 && ec2[0].electrons[0].indexOf("[") == 0)
+    ) {
+      ec2.splice(0, 1);
+      continue;
+    }
+
+    ec2[0].electrons[ec2[0].electrons.length - 1][1] -= 1;
+    charge -= 1;
+
+    if (ec2[0].electrons[ec2[0].electrons.length - 1][1] == 0)
+      ec2[0].electrons.pop();
+  }
+
+  if (
+    ec2[0].electrons.length == 0 ||
+    (ec2[0].electrons.length == 1 && ec2[0].electrons[0].indexOf("[") == 0)
+  ) {
+    ec2.splice(0, 1);
+    ec2[0].from = null;
+  }
+
+  return ec2;
+};
+
+const ElectronConfigList: React.FC<{ charge: number; base: KimiElement }> = ({
+  charge,
+  base,
+}) => {
+  const ec = adjustCharge(parsedEC(base), charge);
+  const [expand, setExpand] = React.useState(false);
+
+  return (
+    <>
+      {ec.slice(0, expand ? void 0 : 1).map((e, i) => (
+        <DataRow
+          key={i}
+          title={
+            e.from ? (
+              <Katex src={`\\text{${e.from.symbol}}`} />
+            ) : (
+              <>
+                <input
+                  type="checkbox"
+                  checked={expand}
+                  onChange={(e) => setExpand(e.target.checked)}
+                />{" "}
+                Election Config:
+              </>
+            )
+          }
+        >
+          <Katex
+            src={[...(e.nested ? [e.nested.symbol] : []), ...e.electrons]
+              .map((e) => {
+                if (typeof e == "object") {
+                  const [a, b] = e;
+                  return `${a}^{${b}}`;
+                } else {
+                  return `\\text{[${e}]}`;
+                }
+              })
+              .join("\\;")}
+          />
+        </DataRow>
+      ))}
+
+      {/* {expand ? (
+        <div className="grid grid-cols-5 col-span-2 text-center place-self-center">
+          <div className="grid w-10 h-10 col-start-1 row-start-2 m-1 border place-items-center">
+            AV
+          </div>
+          <div className="grid w-10 h-10 col-start-3 row-start-2 m-1 border place-items-center"></div>
+          <div className="grid w-10 h-10 col-start-5 row-start-2 m-1 border place-items-center"></div>
+          <div className="grid w-10 h-10 col-start-2 row-start-1 m-1 border place-items-center"></div>
+          <div className="grid w-10 h-10 col-start-4 row-start-1 m-1 border place-items-center"></div>
+        </div>
+      ) : null} */}
+    </>
+  );
 };
