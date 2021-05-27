@@ -239,26 +239,29 @@ export const Equilibrium2: React.FC<{ eq: Equation }> = ({ eq }) => {
 
 const equib = (k: number, lhs: [number, number][], rhs: [number, number][]) => {
   try {
-    const fmt = (xs: [number, number][]) =>
+    const fmt = (xs: [number, number][], sign: "+" | "-") =>
       mathjs
-        .simplify(xs.map(([a, e]) => `(${a} - ${e}*x)^${e}`).join(" * "))
+        .simplify(xs.map(([a, e]) => `(${a} ${sign} ${e}*x)^${e}`).join(" * "))
         .toString();
 
-    const eq = `${k} = (${fmt(rhs)}) / (${fmt(lhs)})`;
+    const eq = `${k} = (${fmt(rhs, "+")}) / (${fmt(lhs, "-")})`;
 
-    const fmtTex = (xs: [number, number][]) =>
+    const fmtTex = (xs: [number, number][], sign: "+" | "-") =>
       xs
         .map(([a, e]) =>
           e == 1 && a == 0
-            ? "-x"
+            ? `${sign}x`
             : e == 1
-            ? `${a} - x`
+            ? `(${a} ${sign} x)`
             : a == 0
             ? `(${e}x)^{${e}}`
-            : `(${a} - ${e} x)^{${e}}`
+            : `(${a} ${sign} ${e} x)^{${e}}`
         )
         .join(" \\cdot ");
-    let tex = `\\dfrac{${fmtTex(rhs).toString()}}{${fmtTex(lhs).toString()}}`;
+    let tex = `\\dfrac{${fmtTex(rhs, "+").toString()}}{${fmtTex(
+      lhs,
+      "-"
+    ).toString()}}`;
 
     let s: string[];
 
@@ -358,18 +361,18 @@ const Equilibrium: React.FC<{}> = ({}) => {
         />
         <span>Equilibrium</span>
         <UnitInput
-          value={res ? (a - res.x) / lc[0] : NaN}
-          placeholder="res ? -res.x : NaN"
+          value={res ? a - res.x * lc[0] : NaN}
+          placeholder="res ? a - res.x * lc[0] : NaN"
           unit="M"
         />
         <UnitInput
-          value={res ? res.x * lc[1] : NaN}
-          placeholder="res ? res.x : NaN"
+          value={res ? u + res.x * lc[1] : NaN}
+          placeholder="res ? u + res.x * lc[1] : NaN"
           unit="M"
         />
         <UnitInput
-          value={res ? res.x * lc[2] : NaN}
-          placeholder="res ? res.x : NaN"
+          value={res ? v + res.x * lc[2] : NaN}
+          placeholder="res ? v + res.x * lc[2] : NaN"
           unit="M"
         />
       </div>
@@ -396,11 +399,7 @@ const Equilibrium: React.FC<{}> = ({}) => {
 
         <div className="grid flex-1 col-start-2 row-span-full place-items-center">
           {/* `(${k}) = ((x - ${u})*(x - ${v}) / (${a} - x))` */}
-          <Katex
-            src={`${mathjs
-              .simplify((k as any as string) || "0")
-              .toTex({ precision })} = ${tex}`}
-          />
+          <Katex src={`${k} = ${tex}`} />
           {/* <Katex
             src={`${mathjs
               .simplify((k as any as string) || "0")
