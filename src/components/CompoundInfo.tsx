@@ -284,7 +284,7 @@ const adjustCharge = (ec: ParsedEC, charge: number) => {
     ec2[0].electrons.sort((a, b) =>
       a[0][0] == "["
         ? Infinity
-        : b[0][0]
+        : b[0][0] == "["
         ? -Infinity
         : orbitalAddOrder.findIndex((x) => x[0] == a[0])! -
           orbitalAddOrder.findIndex((x) => x[0] == b[0])!
