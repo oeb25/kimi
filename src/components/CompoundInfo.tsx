@@ -89,6 +89,9 @@ export const CompoundInfo: React.FC<{ ft: FormulaTerm }> = ({ ft }) => {
             <DataRow title="Name:">
               <Katex src={`\\text{${cData.name}}`} />
             </DataRow>
+            <DataRow title="Type:">
+              <Katex src={`\\text{${cData.type}}`} />
+            </DataRow>
             <DataRow title="Period:">
               <Katex src={`\\text{${cData.period}}`} />
             </DataRow>
