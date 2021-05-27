@@ -30,7 +30,8 @@ const idealGas = (
 idealGas.rawArgs = true;
 
 const massOf = (args: mathjs.MathNode[]) => {
-  const parsed = parseFormulaTerm(args[0].toString());
+  console.log(args[0].toString().replace(/ /g, ""));
+  const parsed = parseFormulaTerm(args[0].toString().replace(/ /g, ""));
   return mathjs.evaluate(
     parsed.count * calculateAtomicMass([parsed.compound]) + "g/mol"
   );

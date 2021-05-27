@@ -90,6 +90,8 @@ const balance = ({
   };
 };
 
+// TODO: Fix factor 2 on all for [S + O2 = SO2]
+
 export const toBalanced = (eq: Equation): Equation => {
   const { left, right } = balance(eq);
   return {
