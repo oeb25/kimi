@@ -273,11 +273,11 @@ const equib = (k: number, lhs: [number, number][], rhs: [number, number][]) => {
       return { tex };
     }
 
+    const minInitial = Math.min(...lhs.map((l) => l[0] / l[1]));
+
     const solved: number[] = s
       .map((x) => mathjs.parse(x).evaluate())
-      .filter((c) => mathjs.isNumeric(c));
-
-    console.log(solved);
+      .filter((c) => mathjs.isNumeric(c) && c <= minInitial);
 
     if (solved.length == 0) return { tex };
 
@@ -291,6 +291,7 @@ const equib = (k: number, lhs: [number, number][], rhs: [number, number][]) => {
 const Equilibrium: React.FC<{}> = ({}) => {
   const precision = React.useContext(Precision);
 
+  const [twoProducts, setTwoProducts] = React.useState(true);
   const [coef, setCoef] = React.useState([1, 1, 1]);
 
   const [a, setA] = React.useState(0.25);
@@ -305,21 +306,65 @@ const Equilibrium: React.FC<{}> = ({}) => {
   const lc = coef.map((c) => Math.min(c, 10));
   const { tex, res } = equib(
     k,
-    [[a, lc[0]]],
-    [
-      [u, lc[1]],
-      [v, lc[2]],
-    ]
+    twoProducts
+      ? [[a, lc[0]]]
+      : [
+          [a, lc[0]],
+          [u, lc[1]],
+        ],
+    twoProducts
+      ? [
+          [u, lc[1]],
+          [v, lc[2]],
+        ]
+      : [[v, lc[2]]]
   );
 
   // console.log({ a, k, u, v }, res);
 
   return (
     <div>
+      <div className="flex justify-center w-full space-x-8 text-gray-400">
+        <div className="flex flex-col items-center">
+          <label htmlFor="reactants">Two reactants:</label>
+          <input
+            id="reactants"
+            type="radio"
+            checked={!twoProducts}
+            onChange={() => setTwoProducts(false)}
+          />
+        </div>
+        <div className="flex flex-col items-center">
+          <label htmlFor="products">Two products:</label>
+          <input
+            id="products"
+            type="radio"
+            checked={twoProducts}
+            onChange={() => setTwoProducts(true)}
+          />
+        </div>
+      </div>
+
       <div
         className="grid border-b"
-        style={{ gridTemplateColumns: "auto repeat(3, auto)" }}
+        style={{
+          gridTemplateColumns: `auto repeat(${
+            twoProducts ? 1 : 2
+          }, auto) auto repeat(${twoProducts ? 2 : 1}, auto)`,
+        }}
       >
+        <div
+          className="flex items-center pr-3"
+          style={{
+            gridColumnStart: twoProducts ? 3 : 4,
+            gridRow: "1 / 5",
+          }}
+        >
+          <span className="text-lg">
+            <Katex src="\leftrightharpoons" />
+          </span>
+        </div>
+
         <span>Coeif</span>
         <UnitInput
           value={coef[0]}
@@ -350,7 +395,7 @@ const Equilibrium: React.FC<{}> = ({}) => {
           unit="M"
         />
         <UnitInput
-          value={res ? res.x : NaN}
+          value={res ? (twoProducts ? res.x : -res.x) : NaN}
           placeholder="res ? res.x : NaN"
           unit="M"
         />
@@ -366,7 +411,7 @@ const Equilibrium: React.FC<{}> = ({}) => {
           unit="M"
         />
         <UnitInput
-          value={res ? u + res.x * lc[1] : NaN}
+          value={res ? u + (twoProducts ? res.x : -res.x) * lc[1] : NaN}
           placeholder="res ? u + res.x * lc[1] : NaN"
           unit="M"
         />
