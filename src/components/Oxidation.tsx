@@ -7,13 +7,14 @@ export const Oxidation: React.FC<{ c: Compound }> = ({ c }) => {
   const targetOxidation = targetOxidationStr
     ? parseInt(targetOxidationStr)
     : void 0;
+  const [includeUncommon, setIncludeUncommon] = React.useState(false);
 
   const oxidations = React.useMemo(
     () =>
       determineOxidations(c, {
-        includeUncommon: false,
+        includeUncommon,
       }),
-    [c]
+    [c, includeUncommon]
   );
 
   const filtered = React.useMemo(
@@ -36,6 +37,18 @@ export const Oxidation: React.FC<{ c: Compound }> = ({ c }) => {
           placeholder="?"
           value={targetOxidationStr}
           onChange={(e) => setTargetOxidationStr(e.target.value)}
+        />
+      </div>
+      <div>
+        <label className="text-gray-500" htmlFor="includeUncommon">
+          Include uncommon oxidations:
+        </label>
+        <input
+          id="includeUncommon"
+          className="w-6 p-1 ml-2 text-center bg-transparent border-b border-gray-900"
+          type="checkbox"
+          checked={includeUncommon}
+          onChange={(e) => setIncludeUncommon(e.target.checked)}
         />
       </div>
       <div className="grid items-start grid-flow-col gap-4 justify-items-start">
